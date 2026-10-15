@@ -41,6 +41,22 @@ export const AadhaarKYCModal: React.FC = () => {
     setLoading(true);
     try {
       const result = await aadhaarDigiLockerService.verifyAadhaarOtp(aadhaarNumber, otp);
+      
+      // Call live server endpoint for backend persistence and audit log
+      try {
+        await fetch('/api/v1/kyc/aadhaar/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workerId: currentWorker.id,
+            aadhaarNumber,
+            otp
+          })
+        });
+      } catch (e) {
+        console.warn('Backend KYC sync warning:', e);
+      }
+
       // Fetch DigiLocker certificates
       const certs = await aadhaarDigiLockerService.fetchDigiLockerCertificates(currentWorker.phone);
       setCertificates(certs);

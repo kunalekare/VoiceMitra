@@ -64,6 +64,23 @@ export const RazorpayCheckoutModal: React.FC = () => {
         throw new Error('Payment HMAC signature check failed.');
       }
 
+      // Sync with server SQLite escrow ledger & payment record
+      try {
+        await fetch('/api/v1/payments/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jobId: data.jobId,
+            employerId: 'emp-01',
+            razorpayOrderId: order.orderId,
+            razorpayPaymentId: paymentId,
+            razorpaySignature: signature
+          })
+        });
+      } catch (err) {
+        console.warn('Backend payment sync warning:', err);
+      }
+
       // 3. Update Job in database
       const existingJob = jobsRepo.getById(data.jobId);
       if (existingJob) {

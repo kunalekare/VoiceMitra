@@ -90,12 +90,31 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
       isAvailable: true,
       status: 'active',
       verifiedSkillBadges: currentWorker?.verifiedSkillBadges || ['Voice Registered'],
-      portfolioVideoUrl: portfolioVideoName ? `portfolio_${portfolioVideoName}` : undefined,
       createdAt: new Date().toISOString(),
       dailyWageExpected: Number(dailyWage) || 850
     };
 
     workersRepo.save(newWorker);
+
+    // Sync with server SQLite database
+    try {
+      fetch('/api/v1/workers/voice-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: newWorker.id,
+          phone: newWorker.phone,
+          textInput: extractedData?.transcript,
+          overrideData: {
+            name: newWorker.name,
+            primarySkill: newWorker.primarySkill,
+            experienceYears: newWorker.experienceYears,
+            district: newWorker.district
+          }
+        })
+      }).catch(() => {});
+    } catch {}
+
     loginAsWorker(newWorkerId);
     setStep('complete');
   };

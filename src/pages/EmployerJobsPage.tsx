@@ -41,7 +41,14 @@ export const EmployerJobsPage: React.FC = () => {
     return j.status === filterStatus;
   });
 
-  const handleMarkComplete = (jobId: string) => {
+  const handleMarkComplete = async (jobId: string) => {
+    try {
+      await fetch(`/api/v1/jobs/${jobId}/transition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed', actorId: employerId, actorRole: 'employer' })
+      });
+    } catch {}
     jobsRepo.updateStatus(jobId, 'completed');
     const fresh = jobsRepo.getByEmployerId(employerId);
     setJobs(fresh);
@@ -49,15 +56,36 @@ export const EmployerJobsPage: React.FC = () => {
     refreshUserData();
   };
 
-  const handleCancelJob = (jobId: string) => {
+  const handleCancelJob = async (jobId: string) => {
+    try {
+      await fetch(`/api/v1/jobs/${jobId}/transition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled', actorId: employerId, actorRole: 'employer' })
+      });
+    } catch {}
     jobsRepo.updateStatus(jobId, 'cancelled');
     const fresh = jobsRepo.getByEmployerId(employerId);
     setJobs(fresh);
   };
 
-  const handleSaveReview = (jobId: string) => {
+  const handleSaveReview = async (jobId: string) => {
     const job = jobs.find((j) => j.id === jobId);
     if (!job) return;
+
+    try {
+      await fetch(`/api/v1/jobs/${jobId}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reviewerId: employerId,
+          reviewerRole: 'employer',
+          workerId: job.workerIds[0] || 'w-ngp-01',
+          score: rating,
+          comment: reviewText
+        })
+      });
+    } catch {}
 
     reviewsRepo.addReview({
       id: `rev-${Date.now()}`,
@@ -77,8 +105,21 @@ export const EmployerJobsPage: React.FC = () => {
     refreshUserData();
   };
 
-  const handleRaiseDispute = (jobId: string) => {
+  const handleRaiseDispute = async (jobId: string) => {
     if (!disputeReason.trim()) return;
+
+    try {
+      await fetch('/api/v1/disputes/open', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId,
+          raisedBy: 'employer',
+          reason: disputeReason,
+          actorId: employerId
+        })
+      });
+    } catch {}
 
     disputesRepo.save({
       id: `disp-${Date.now()}`,

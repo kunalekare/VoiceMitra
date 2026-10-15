@@ -89,8 +89,15 @@ export const AdminDashboard: React.FC = () => {
     { name: 'Insurance Micro-Referrals (₹50/mo)', value: 5000, color: '#8b5cf6' }
   ];
 
-  const handleToggleWorkerStatus = (wId: string, currentStatus: Worker['status']) => {
+  const handleToggleWorkerStatus = async (wId: string, currentStatus: Worker['status']) => {
     const nextStatus = currentStatus === 'active' ? 'suspended' : 'active';
+    try {
+      await fetch(`/api/v1/admin/workers/${wId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus, reason: 'Admin dashboard toggle' })
+      });
+    } catch {}
     workersRepo.updateStatus(wId, nextStatus);
     setWorkers(workersRepo.getAll());
     auditLogsRepo.log({
@@ -118,9 +125,19 @@ export const AdminDashboard: React.FC = () => {
     setAuditLogs(auditLogsRepo.getAll());
   };
 
-  const handleResolveDispute = (dId: string, outcome: 'resolved_refund' | 'resolved_payout') => {
+  const handleResolveDispute = async (dId: string, outcome: 'resolved_refund' | 'resolved_payout') => {
     const dispute = disputes.find((d) => d.id === dId);
     if (!dispute) return;
+    try {
+      await fetch(`/api/v1/disputes/${dId}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resolution: outcome === 'resolved_refund' ? 'resolve_refund' : 'resolve_disburse',
+          notes: `Admin mediator resolved with ${outcome}`
+        })
+      });
+    } catch {}
     dispute.status = outcome;
     dispute.notes = `Mediator resolved with ${outcome}`;
     disputesRepo.save(dispute);
@@ -137,9 +154,19 @@ export const AdminDashboard: React.FC = () => {
     setAuditLogs(auditLogsRepo.getAll());
   };
 
-  const handleSendBroadcast = (e: React.FormEvent) => {
+  const handleSendBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     setBroadcastSent(true);
+    try {
+      await fetch('/api/v1/admin/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel: broadcastChannel,
+          message: broadcastMessage
+        })
+      });
+    } catch {}
     notificationsRepo.send({
       userId: 'broadcast-all',
       role: 'worker',

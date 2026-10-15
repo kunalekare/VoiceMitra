@@ -86,6 +86,23 @@ export const SkillQuizModal: React.FC = () => {
         // tolerate
       }
 
+      // Sync with server SQLite quiz attempts and badge issuance
+      try {
+        const answersPayload = questions.map((q, idx) => ({
+          questionId: q.id,
+          selectedIndex: selectedAnswers[idx] ?? -1
+        }));
+        fetch('/api/v1/quiz/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workerId: currentWorker.id,
+            skill: targetSkill,
+            answers: answersPayload
+          })
+        }).catch(() => {});
+      } catch {}
+
       // Add badge to worker
       const updated = {
         ...currentWorker,
