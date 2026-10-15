@@ -1,4 +1,20 @@
 import { LanguageCode } from '../types';
+import { useAppStore } from '../store';
+import { useCallback } from 'react';
+
+// Import all 12 locale files
+import en from './locales/en.json';
+import hi from './locales/hi.json';
+import mr from './locales/mr.json';
+import ta from './locales/ta.json';
+import te from './locales/te.json';
+import kn from './locales/kn.json';
+import ml from './locales/ml.json';
+import bn from './locales/bn.json';
+import gu from './locales/gu.json';
+import or from './locales/or.json';
+import pa from './locales/pa.json';
+import ur from './locales/ur.json';
 
 export interface LanguageOption {
   code: LanguageCode;
@@ -6,514 +22,330 @@ export interface LanguageOption {
   nativeName: string;
   flag: string;
   voiceLangCode: string;
+  scriptFont: string;
 }
 
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [
-  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', voiceLangCode: 'hi-IN' },
-  { code: 'mr', name: 'Marathi', nativeName: 'मराठी', flag: '🚩', voiceLangCode: 'mr-IN' },
-  { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', flag: '🏛️', voiceLangCode: 'ta-IN' },
-  { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', flag: '🌾', voiceLangCode: 'te-IN' },
-  { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ', flag: '🪔', voiceLangCode: 'kn-IN' },
-  { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം', flag: '🌴', voiceLangCode: 'ml-IN' },
-  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🐯', voiceLangCode: 'bn-IN' },
-  { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી', flag: '🪁', voiceLangCode: 'gu-IN' },
-  { code: 'or', name: 'Odia', nativeName: 'ଓଡ଼ିଆ', flag: '🛕', voiceLangCode: 'or-IN' },
-  { code: 'pa', name: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ', flag: '🌾', voiceLangCode: 'pa-IN' },
-  { code: 'ur', name: 'Urdu', nativeName: 'اردو', flag: '🌙', voiceLangCode: 'ur-IN' },
-  { code: 'en', name: 'English', nativeName: 'English', flag: '🌐', voiceLangCode: 'en-IN' }
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', voiceLangCode: 'hi-IN', scriptFont: 'Noto Sans Devanagari' },
+  { code: 'mr', name: 'Marathi', nativeName: 'मराठी', flag: '🚩', voiceLangCode: 'mr-IN', scriptFont: 'Noto Sans Devanagari' },
+  { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', flag: '🏛️', voiceLangCode: 'ta-IN', scriptFont: 'Noto Sans Tamil' },
+  { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', flag: '🌾', voiceLangCode: 'te-IN', scriptFont: 'Noto Sans Telugu' },
+  { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ', flag: '🪔', voiceLangCode: 'kn-IN', scriptFont: 'Noto Sans Kannada' },
+  { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം', flag: '🌴', voiceLangCode: 'ml-IN', scriptFont: 'Noto Sans Malayalam' },
+  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🐯', voiceLangCode: 'bn-IN', scriptFont: 'Noto Sans Bengali' },
+  { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી', flag: '🪁', voiceLangCode: 'gu-IN', scriptFont: 'Noto Sans Gujarati' },
+  { code: 'or', name: 'Odia', nativeName: 'ଓଡ଼ିଆ', flag: '🛕', voiceLangCode: 'or-IN', scriptFont: 'Noto Sans Oriya' },
+  { code: 'pa', name: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ', flag: '🌾', voiceLangCode: 'pa-IN', scriptFont: 'Noto Sans Gurmukhi' },
+  { code: 'ur', name: 'Urdu', nativeName: 'اردو', flag: '🌙', voiceLangCode: 'ur-IN', scriptFont: 'Noto Nastaliq Urdu' },
+  { code: 'en', name: 'English', nativeName: 'English', flag: '🌐', voiceLangCode: 'en-IN', scriptFont: 'Plus Jakarta Sans' }
 ];
 
-export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
+export const LOCALES: Record<LanguageCode, Record<string, unknown>> = {
+  en: en as Record<string, unknown>,
+  hi: hi as Record<string, unknown>,
+  mr: mr as Record<string, unknown>,
+  ta: ta as Record<string, unknown>,
+  te: te as Record<string, unknown>,
+  kn: kn as Record<string, unknown>,
+  ml: ml as Record<string, unknown>,
+  bn: bn as Record<string, unknown>,
+  gu: gu as Record<string, unknown>,
+  or: or as Record<string, unknown>,
+  pa: pa as Record<string, unknown>,
+  ur: ur as Record<string, unknown>
+};
+
+// Trade Name Localization Map for all 12 languages
+export const TRADE_LOCALIZATIONS: Record<LanguageCode, Record<string, string>> = {
   en: {
-    app_name: 'SkillBridge',
-    tagline: "Voice-Powered Hiring for India's 500M Informal Workers",
-    listen_btn: 'Listen',
-    role_worker: 'Worker / Karigar',
-    role_employer: 'Employer / Contractor',
-    role_admin: 'Admin / Ops',
-    voice_register_title: 'Speak to Register Your Profile',
-    voice_register_subtitle: 'Speak in your own language about your work, skills, years of experience, and city.',
-    tap_to_speak: 'Tap to Speak',
-    recording: 'Recording... Speak now',
-    stop_recording: 'Stop & Submit',
-    re_record: 'Record Again',
-    confirm_profile: 'Confirm Your Profile Details',
-    name_label: 'Full Name',
-    skill_label: 'Primary Trade / Skill',
-    exp_label: 'Years of Experience',
-    location_label: 'City / District',
-    phone_label: 'Mobile Number',
-    save_profile: 'Save & Get Verified',
-    available_now: 'Available for Work',
-    busy_now: 'Currently Busy',
-    pending_offers: 'New Job Offers',
-    accept_job: 'Accept Job',
-    decline_job: 'Decline',
-    earnings_total: 'Total Earnings',
-    reputation_score: 'Reputation Score',
-    jobs_done: 'Jobs Completed',
-    search_placeholder: 'Search electrician, plumber, carpenter...',
-    hire_now: 'Hire Worker',
-    view_profile: 'View Profile',
-    ranking_score: 'SkillBridge Match Score',
-    aadhaar_verified: 'Aadhaar Verified',
-    skill_badge: 'Verified Skill Pro',
-    whatsapp_bot: 'WhatsApp Bot Simulator',
-    ivr_sim: 'IVR Phone Dialpad',
-    demo_logins: '1-Click Demo Login'
+    Electrician: 'Electrician',
+    Plumber: 'Plumber',
+    Mason: 'Mason',
+    Painter: 'Painter',
+    Carpenter: 'Carpenter',
+    Welder: 'Welder',
+    Driver: 'Driver',
+    'Domestic Help': 'Domestic Help',
+    'AC Technician': 'AC Technician',
+    'Tile & Marble Setter': 'Tile & Marble Setter',
+    Gardener: 'Gardener',
+    'Appliance Repair': 'Appliance Repair'
   },
   hi: {
-    app_name: 'स्किलब्रिज',
-    tagline: 'भारत के 50 करोड़ कामगारों के लिए आवाज़ से रोज़गार',
-    listen_btn: 'सुनें',
-    role_worker: 'कामगार / कारीगर',
-    role_employer: 'मालिक / ठेकेदार',
-    role_admin: 'प्रशासन / एडमिन',
-    voice_register_title: 'बोलकर अपना प्रोफाइल बनाएं',
-    voice_register_subtitle: 'अपनी भाषा में बताएं: आपका नाम, हुनर (काम), कितने साल का अनुभव और आपका शहर।',
-    tap_to_speak: 'बोलने के लिए दबाएं',
-    recording: 'रिकॉर्डिंग चालू है... बोलिए',
-    stop_recording: 'रोकें और प्रोफाइल बनाएं',
-    re_record: 'फिर से बोलें',
-    confirm_profile: 'अपनी जानकारी की पुष्टि करें',
-    name_label: 'पूरा नाम',
-    skill_label: 'मुख्य काम / हुनर',
-    exp_label: 'अनुभव (वर्ष)',
-    location_label: 'शहर / ज़िला',
-    phone_label: 'मोबाइल नंबर',
-    save_profile: 'सुरक्षित करें और सत्यापित हों',
-    available_now: 'काम के लिए तैयार',
-    busy_now: 'अभी व्यस्त हैं',
-    pending_offers: 'काम के नए प्रस्ताव',
-    accept_job: 'काम स्वीकार करें',
-    decline_job: 'मना करें',
-    earnings_total: 'कुल कमाई',
-    reputation_score: 'प्रतिष्ठा स्कोर',
-    jobs_done: 'पूरे किए गए काम',
-    search_placeholder: 'इलेक्ट्रीशियन, प्लंबर, बढ़ई खोजें...',
-    hire_now: 'काम पर रखें',
-    view_profile: 'प्रोफाइल देखें',
-    ranking_score: 'मैच स्कोर',
-    aadhaar_verified: 'आधार सत्यापित',
-    skill_badge: 'प्रमाणित हुनर',
-    whatsapp_bot: 'व्हाट्सएप बॉट सिमुलेटर',
-    ivr_sim: 'आईवीआर फोन सिमुलेटर',
-    demo_logins: 'एक-क्लिक डेमो लॉगिन'
+    Electrician: 'इलेक्ट्रीशियन / बिजली मिस्त्री',
+    Plumber: 'प्लंबर / नल मिस्त्री',
+    Mason: 'राजमिस्त्री / चुनाई कारीगर',
+    Painter: 'पेंटर / रंगाई मिस्त्री',
+    Carpenter: 'बढ़ई / लकड़ी कारीगर',
+    Welder: 'वेल्डर / लोहार',
+    Driver: 'ड्राइवर / वाहन चालक',
+    'Domestic Help': 'घरेलू सहायक / हेल्पर',
+    'AC Technician': 'एसी मैकेनिक',
+    'Tile & Marble Setter': 'टाइल व मार्बल मिस्त्री',
+    Gardener: 'माली / बागवान',
+    'Appliance Repair': 'उपकरण मरम्मत मिस्त्री'
   },
   mr: {
-    app_name: 'स्किलब्रिज',
-    tagline: 'भारतातील ५० कोटी कामगारांसाठी आवाजाद्वारे नोकरी',
-    listen_btn: 'ऐका',
-    role_worker: 'कामगार / कारागीर',
-    role_employer: 'मालक / कंत्राटदार',
-    role_admin: 'प्रशासन',
-    voice_register_title: 'बोलून तुमचे प्रोफाइल तयार करा',
-    voice_register_subtitle: 'तुमच्या भाषेत सांगा: तुमचे नाव, काम, अनुभवाची वर्षे आणि गाव/शहर.',
-    tap_to_speak: 'बोलण्यासाठी दाबा',
-    recording: 'रेकॉर्डिंग सुरू आहे... बोला',
-    stop_recording: 'थांबवा आणि नोंदवा',
-    re_record: 'पुन्हा बोला',
-    confirm_profile: 'माहिती तपासा',
-    name_label: 'पूर्ण नाव',
-    skill_label: 'मुख्य काम',
-    exp_label: 'अनुभव (वर्षे)',
-    location_label: 'शहर / जिल्हा',
-    phone_label: 'मोबाईल नंबर',
-    save_profile: 'नोंदणी पूर्ण करा',
-    available_now: 'कामासाठी उपलब्ध',
-    busy_now: 'सध्या व्यस्त',
-    pending_offers: 'कामाच्या नवीन संधी',
-    accept_job: 'काम स्वीकारा',
-    decline_job: 'नाकारा',
-    earnings_total: 'एकूण कमाई',
-    reputation_score: 'प्रतिष्ठा गुण',
-    jobs_done: 'पूर्ण झालेली कामे',
-    search_placeholder: 'इलेक्ट्रिशियन, प्लंबर, गवंडी शोधा...',
-    hire_now: 'कामावर ठेवा',
-    view_profile: 'प्रोफाइल पहा',
-    ranking_score: 'साम्य स्कोअर',
-    aadhaar_verified: 'आधार पडताळणी पूर्ण',
-    skill_badge: 'प्रमाणित कारागीर',
-    whatsapp_bot: 'व्हॉट्सॲप बॉट',
-    ivr_sim: 'फोन आयव्हीआर',
-    demo_logins: 'डेमो लॉगिन'
+    Electrician: 'इलेक्ट्रिशियन / वीज मिस्त्री',
+    Plumber: 'प्लंबर / नळ कामगार',
+    Mason: 'गवंडी / बांधकाम कारागीर',
+    Painter: 'रंगारी / पेंटर',
+    Carpenter: 'सुतार / लाकूड कामगार',
+    Welder: 'वेल्डर / लोहार कामगार',
+    Driver: 'चालक / ड्रायव्हर',
+    'Domestic Help': 'घरकाम मदतनीस',
+    'AC Technician': 'एसी तंत्रज्ञ',
+    'Tile & Marble Setter': 'फरशी व मार्बल कारागीर',
+    Gardener: 'माळी',
+    'Appliance Repair': 'उपकरणे दुरुस्ती कारागीर'
   },
   ta: {
-    app_name: 'ஸ்கில்பிரிட்ஜ்',
-    tagline: 'இந்தியாவின் உழைப்பாளர்களுக்கான குரல் வழி வேலைவாய்ப்பு',
-    listen_btn: 'கேட்க',
-    role_worker: 'தொழிலாளி / கைவினைஞர்',
-    role_employer: 'முதலாளி / ஒப்பந்ததாரர்',
-    role_admin: 'நிர்வாகி',
-    voice_register_title: 'பேசி சுயவிவரத்தை உருவாக்குங்கள்',
-    voice_register_subtitle: 'உங்கள் பெயர், தொழில், அனுபவம் மற்றும் ஊர் பற்றி தமிழில் பேசுங்கள்.',
-    tap_to_speak: 'பேச அழுத்தவும்',
-    recording: 'பதிவாகிறது... பேசுங்கள்',
-    stop_recording: 'நிறுத்து & பதிவு செய்',
-    re_record: 'மீண்டும் பேசு',
-    confirm_profile: 'விவரங்களை சரிபார்க்கவும்',
-    name_label: 'முழு பெயர்',
-    skill_label: 'முக்கிய தொழில்',
-    exp_label: 'அனுபவம் (ஆண்டுகள்)',
-    location_label: 'மாவட்டம் / ஊர்',
-    phone_label: 'அலைபேசி எண்',
-    save_profile: 'சேமித்து வேலை பெறுங்கள்',
-    available_now: 'வேலைக்கு தயார்',
-    busy_now: 'தற்போது பணியில்',
-    pending_offers: 'புதிய வேலை வாய்ப்புகள்',
-    accept_job: 'ஏற்றுக்கொள்',
-    decline_job: 'நிராகரி',
-    earnings_total: 'மொத்த வருமானம்',
-    reputation_score: 'நம்பகத்தன்மை மதிப்பு',
-    jobs_done: 'முடித்த வேலைகள்',
-    search_placeholder: 'எலக்ட்ரீஷியன், பிளம்பர் தேடுங்கள்...',
-    hire_now: 'பணியமர்த்துக',
-    view_profile: 'சுயவிவரம் பார்க்க',
-    ranking_score: 'பொருந்தும் மதிப்பெண்',
-    aadhaar_verified: 'ஆதார் சரிபார்க்கப்பட்டது',
-    skill_badge: 'சான்றளிக்கப்பட்ட தொழில்',
-    whatsapp_bot: 'வாட்ஸ்அப் பாட்',
-    ivr_sim: 'தொலைபேசி ஐவிஆர்',
-    demo_logins: 'டெமோ உள்நுழைவு'
+    Electrician: 'எலக்ட்ரீஷியன்',
+    Plumber: 'பிளம்பர் / குழாய் வேலை',
+    Mason: 'கொத்தனார் / மேசன்',
+    Painter: 'பெயிண்டர் / வர்ண வேலை',
+    Carpenter: 'தச்சர் / மர வேலை',
+    Welder: 'வெல்டர் / பற்றவைப்பவர்',
+    Driver: 'ஓட்டுநர் / டிரைவர்',
+    'Domestic Help': 'வீட்டு உதவியாளர்',
+    'AC Technician': 'ஏசி மெக்கானிக்',
+    'Tile & Marble Setter': 'டைல்ஸ் மற்றும் மார்பிள் பதிப்பவர்',
+    Gardener: 'தோட்டக்காரர்',
+    'Appliance Repair': 'வீட்டு உபகரண பழுதுநீக்குநர்'
   },
   te: {
-    app_name: 'స్కిల్‌బ్రిడ్జ్',
-    tagline: 'శ్రామికుల కోసం వాయిస్ ఆధారిత ఉద్యోగ వేదిక',
-    listen_btn: 'వినండి',
-    role_worker: 'కార్మికుడు / శ్రామికుడు',
-    role_employer: 'యజమాని / కాంట్రాక్టర్',
-    role_admin: 'అడ్మిన్',
-    voice_register_title: 'మాట్లాడి మీ ప్రొఫైల్ నమోదు చేయండి',
-    voice_register_subtitle: 'మీ పేరు, పని, అనుభవం మరియు ఊరు గురించి మీ భాషలో మాట్లాడండి.',
-    tap_to_speak: 'మాట్లాడటానికి నొక్కండి',
-    recording: 'రికార్డింగ్ అవుతోంది... మాట్లాడండి',
-    stop_recording: 'ఆపి సమర్పించండి',
-    re_record: 'మళ్లీ మాట్లాడండి',
-    confirm_profile: 'వివరాలు సరిచూసుకోండి',
-    name_label: 'పూర్తి పేరు',
-    skill_label: 'ప్రధాన నైపుణ్యం',
-    exp_label: 'అనుభవం (సంవత్సరాలు)',
-    location_label: 'నగరం / జిల్లా',
-    phone_label: 'మొబైల్ సంఖ్య',
-    save_profile: 'సేవ్ చేసి పని పొందండి',
-    available_now: 'పనికి సిద్ధం',
-    busy_now: 'ప్రస్తుతం బిజీ',
-    pending_offers: 'కొత్త పని ఆఫర్లు',
-    accept_job: 'అంగీకరించు',
-    decline_job: 'తిరస్కరించు',
-    earnings_total: 'మొత్తం సంపాదన',
-    reputation_score: 'కీర్తి స్కోరు',
-    jobs_done: 'పూర్తి చేసిన పనులు',
-    search_placeholder: 'ఎలక్ట్రీషియన్, ప్లంబర్ వెతకండి...',
-    hire_now: 'పనిలో పెట్టుకోండి',
-    view_profile: 'ప్రొఫైల్ చూడండి',
-    ranking_score: 'ర్యాంకింగ్ స్కోరు',
-    aadhaar_verified: 'ఆధార్ ధృవీకరించబడింది',
-    skill_badge: 'ధృవీకృత నైపుణ్యం',
-    whatsapp_bot: 'వాట్సాప్ బాట్',
-    ivr_sim: 'ఐవీఆర్ డయలర్',
-    demo_logins: 'డెమో లాగిన్'
+    Electrician: 'ఎలక్ట్రీషియన్',
+    Plumber: 'ప్లంబర్ / పైప్ ఫిట్టర్',
+    Mason: 'తాపీ మేస్త్రీ',
+    Painter: 'పెయింటర్',
+    Carpenter: 'వడ్రంగి',
+    Welder: 'వెల్డర్',
+    Driver: 'డ్రైవర్',
+    'Domestic Help': 'ఇంటి సహాయకుడు',
+    'AC Technician': 'ఏసీ టెక్నీషియన్',
+    'Tile & Marble Setter': 'టైల్స్ & మార్బుల్ మేస్త్రీ',
+    Gardener: 'తోటమాలి',
+    'Appliance Repair': 'గృహోపకరణాల మరమ్మతు'
   },
   kn: {
-    app_name: 'ಸ್ಕಿಲ್‌ಬ್ರಿಡ್ಜ್',
-    tagline: 'ಧ್ವನಿ ಆಧಾರಿತ ಕಾರ್ಮಿಕ ಉದ್ಯೋಗ ವೇದಿಕೆ',
-    listen_btn: 'ಕೇಳಿ',
-    role_worker: 'ಕಾರ್ಮಿಕ / ಕಲಾಕಾರ',
-    role_employer: 'ಮಾಲೀಕ / ಗುತ್ತಿಗೆದಾರ',
-    role_admin: 'ನಿರ್ವಾಹಕ',
-    voice_register_title: 'ಮಾತನಾಡಿ ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ರಚಿಸಿ',
-    voice_register_subtitle: 'ನಿಮ್ಮ ಹೆಸರು, ಕಸುಬು, ಅನುಭವ ಮತ್ತು ಊರನ್ನು ಕನ್ನಡದಲ್ಲಿ ಮಾತನಾಡಿ.',
-    tap_to_speak: 'ಮಾತನಾಡಲು ಒತ್ತಿರಿ',
-    recording: 'ರೆಕಾರ್ಡ್ ಆಗುತ್ತಿದೆ...',
-    stop_recording: 'ನಿಲ್ಲಿಸಿ ಮತ್ತು ಸಲ್ಲಿಸಿ',
-    re_record: 'ಮತ್ತೆ ಮಾತನಾಡಿ',
-    confirm_profile: 'ವಿವರಗಳನ್ನು ದೃಢೀಕರಿಸಿ',
-    name_label: 'ಪೂರ್ಣ ಹೆಸರು',
-    skill_label: 'ಕಸುಬು / ಕೆಲಸ',
-    exp_label: 'ಅನುಭವ (ವರ್ಷಗಳು)',
-    location_label: 'ನಗರ / ಜಿಲ್ಲೆ',
-    phone_label: 'ಮೊಬೈಲ್ ಸಂಖ್ಯೆ',
-    save_profile: 'ಉಳಿಸಿ ಮತ್ತು ಕೆಲಸ ಪಡೆಯಿರಿ',
-    available_now: 'ಕೆಲಸಕ್ಕೆ ಲಭ್ಯ',
-    busy_now: 'ಪ್ರಸ್ತುತ ನಿರತ',
-    pending_offers: 'ಹೊಸ ಕೆಲಸದ ಆಫರ್‌ಗಳು',
-    accept_job: 'ಒಪ್ಪಿಕೊಳ್ಳಿ',
-    decline_job: 'ತಿರಸ್ಕರಿಸಿ',
-    earnings_total: 'ಒಟ್ಟು ಗಳಿಕೆ',
-    reputation_score: 'ರೇಟಿಂಗ್ ಸ್ಕೋರ್',
-    jobs_done: 'ಮುಗಿಸಿದ ಕೆಲಸಗಳು',
-    search_placeholder: 'ಎಲೆಕ್ಟ್ರಿಷಿಯನ್, ಪ್ಲಂಬರ್ ಹುಡುಕಿ...',
-    hire_now: 'ನೇಮಕ ಮಾಡಿ',
-    view_profile: 'ಪ್ರೊಫೈಲ್ ನೋಡಿ',
-    ranking_score: 'ಹೊಂದಾಣಿಕೆ ಸ್ಕೋರ್',
-    aadhaar_verified: 'ಆಧಾರ್ ಪರಿಶೀಲಿಸಲಾಗಿದೆ',
-    skill_badge: 'ಪರಿಶೀಲಿತ ಕೌಶಲ್ಯ',
-    whatsapp_bot: 'ವಾಟ್ಸಾಪ್ ಬಾಟ್',
-    ivr_sim: 'ಐವಿಆರ್ ಡಯಲರ್',
-    demo_logins: 'ಡೆಮೊ ಲಾಗಿನ್'
+    Electrician: 'ಎಲೆಕ್ಟ್ರಿಷಿಯನ್',
+    Plumber: 'ಪ್ಲಂಬರ್ / ಕೊಳವೆ ಕೆಲಸ',
+    Mason: 'ಮೇಸ್ತ್ರಿ / ಕಟ್ಟಡ ಕೆಲಸಗಾರ',
+    Painter: 'ಪೇಂಟರ್ / ಬಣ್ಣ ಬಳಿಯುವವರು',
+    Carpenter: 'ಬಡಗಿ / ಮರಗೆಲಸಗಾರ',
+    Welder: 'ವೆಲ್ಡರ್',
+    Driver: 'ಚಾಲಕ / ಡ್ರೈವರ್',
+    'Domestic Help': 'ಮನೆಗೆಲಸ ಸಹಾಯಕ',
+    'AC Technician': 'ಎಸಿ ತಂತ್ರಜ್ಞ',
+    'Tile & Marble Setter': 'ಟೈಲ್ಸ್ ಮತ್ತು ಮಾರ್ಬಲ್ ಕೆಲಸಗಾರ',
+    Gardener: 'ತೋಟಗಾರ',
+    'Appliance Repair': 'ಉಪಕರಣ ದುರಸ್ತಿ'
   },
   ml: {
-    app_name: 'സ്കിൽബ്രിഡ്ജ്',
-    tagline: 'ശബ്ദത്തിലൂടെ തൊഴിലാളികൾക്ക് ജോലി ഉറപ്പാക്കുന്നു',
-    listen_btn: 'കേൾക്കുക',
-    role_worker: 'തൊഴിലാളി',
-    role_employer: 'തൊഴിലുടമ / കരാറുകാരൻ',
-    role_admin: 'അഡ്മിൻ',
-    voice_register_title: 'സംസാരിച്ച് പ്രൊഫൈൽ ഉണ്ടാക്കൂ',
-    voice_register_subtitle: 'നിങ്ങളുടെ പേര്, തൊഴിൽ, പരിചയം, സ്ഥലം എന്നിവ പറയുക.',
-    tap_to_speak: 'സംസാരിക്കാൻ ടാപ്പ് ചെയ്യുക',
-    recording: 'റെക്കോർഡ് ചെയ്യുന്നു...',
-    stop_recording: 'നിർത്തുക & സമർപ്പിക്കുക',
-    re_record: 'വീണ്ടും സംസാരിക്കുക',
-    confirm_profile: 'വിവരങ്ങൾ ഉറപ്പാക്കുക',
-    name_label: 'പൂർണ്ണ നാമം',
-    skill_label: 'പ്രധാന തൊഴിൽ',
-    exp_label: 'പരിചയം (വർഷങ്ങൾ)',
-    location_label: 'ജില്ല / നഗരം',
-    phone_label: 'മൊബൈൽ നമ്പർ',
-    save_profile: 'രേഖപ്പെടുത്തുക',
-    available_now: 'ജോലിക്ക് തയ്യാർ',
-    busy_now: 'നിലവിൽ ലഭ്യമല്ല',
-    pending_offers: 'പുതിയ തൊഴിൽ ഓഫറുകൾ',
-    accept_job: 'സ്വീകരിക്കുക',
-    decline_job: 'നിരസിക്കുക',
-    earnings_total: 'ആകെ വരുമാനം',
-    reputation_score: 'റേറ്റിംഗ് സ്കോർ',
-    jobs_done: 'പൂർത്തിയാക്കിയ ജോലികൾ',
-    search_placeholder: 'ഇലക്ട്രീഷ്യൻ, പ്ലംബർ തിരയുക...',
-    hire_now: 'ജോലിക്ക് വെക്കുക',
-    view_profile: 'പ്രൊഫൈൽ കാണുക',
-    ranking_score: 'മാച്ച് സ്കോർ',
-    aadhaar_verified: 'ആധാർ വെരിഫൈഡ്',
-    skill_badge: 'സർട്ടിഫൈഡ് സ്കിൽ',
-    whatsapp_bot: 'വാട്ട്സ്ആപ്പ് ബോട്ട്',
-    ivr_sim: 'ഫോൺ ഐവിആർ',
-    demo_logins: 'ഡെമോ ലോഗിൻ'
+    Electrician: 'ഇലക്ട്രീഷ്യൻ',
+    Plumber: 'പ്ലംബർ',
+    Mason: 'മേസ്തിരി',
+    Painter: 'പെയിന്റർ',
+    Carpenter: 'ആശാരി',
+    Welder: 'വെൽഡർ',
+    Driver: 'ഡ്രൈവർ',
+    'Domestic Help': 'വീട്ടുസഹായി',
+    'AC Technician': 'എസി മെക്കാനിക്',
+    'Tile & Marble Setter': 'ടൈൽ & മാർബിൾ പണിക്കാരൻ',
+    Gardener: 'തോട്ടക്കാരൻ',
+    'Appliance Repair': 'ഉപകരണ റിപ്പയർ'
   },
   bn: {
-    app_name: 'স্কিলব্রিজ',
-    tagline: 'ভারতের শ্রমিকদের জন্য ভয়েস-চালিত কর্মসংস্থান',
-    listen_btn: 'শুনুন',
-    role_worker: 'কারিগর / কর্মী',
-    role_employer: 'মালিক / ঠিকাদার',
-    role_admin: 'অ্যাডমিন',
-    voice_register_title: 'কথা বলে প্রোফাইল তৈরি করুন',
-    voice_register_subtitle: 'নিজের ভাষায় বলুন: নাম, কাজ, অভিজ্ঞতার বছর এবং জেলা।',
-    tap_to_speak: 'বলার জন্য চাপুন',
-    recording: 'রেকর্ডিং হচ্ছে...',
-    stop_recording: 'থামুন ও জমা দিন',
-    re_record: 'আবার বলুন',
-    confirm_profile: 'তথ্য যাচাই করুন',
-    name_label: 'পুরো নাম',
-    skill_label: 'মূল কাজ',
-    exp_label: 'অভিজ্ঞতা (বছর)',
-    location_label: 'শহর / জেলা',
-    phone_label: 'মোবাইল নম্বর',
-    save_profile: 'সংরক্ষণ করুন',
-    available_now: 'কাজের জন্য প্রস্তুত',
-    busy_now: 'ব্যস্ত আছেন',
-    pending_offers: 'নতুন কাজের প্রস্তাব',
-    accept_job: 'গ্রহণ করুন',
-    decline_job: 'বাতিল করুন',
-    earnings_total: 'মোট আয়',
-    reputation_score: 'রেটিং স্কোর',
-    jobs_done: 'সম্পন্ন কাজ',
-    search_placeholder: 'ইলেক্ট্রিশিয়ান, প্লাম্বার খুঁজুন...',
-    hire_now: 'কাজে নিয়োগ করুন',
-    view_profile: 'প্রোফাইল দেখুন',
-    ranking_score: 'ম্যাচ স্কোর',
-    aadhaar_verified: 'আধার যাচাইকৃত',
-    skill_badge: 'প্রত্যয়িত কারিগর',
-    whatsapp_bot: 'হোয়াটসঅ্যাপ বট',
-    ivr_sim: 'আইভিআর ডায়ালার',
-    demo_logins: 'ডেমো লগইন'
+    Electrician: 'ইলেকট্রিশিয়ান',
+    Plumber: 'প্লাম্বার',
+    Mason: 'রাজমিস্ত্রি',
+    Painter: 'পেইন্টার / রং মিস্ত্রি',
+    Carpenter: 'কাঠমিস্ত্রি',
+    Welder: 'ওয়েল্ডার',
+    Driver: 'ড্রাইভার',
+    'Domestic Help': 'গৃহসহায়িকা / হেল্পার',
+    'AC Technician': 'এসি মেকানিক',
+    'Tile & Marble Setter': 'টাইলস ও মার্বেল মিস্ত্রি',
+    Gardener: 'মালী',
+    'Appliance Repair': 'যন্ত্রপাতি মেরামত'
   },
   gu: {
-    app_name: 'સ્કિલબ્રિજ',
-    tagline: 'ભારતના કારીગરો માટે અવાજ આધારિત રોજગાર મંચ',
-    listen_btn: 'સાંભળો',
-    role_worker: 'કારીગર / શ્રમિક',
-    role_employer: 'માલિક / કોન્ટ્રાક્ટર',
-    role_admin: 'એડમિન',
-    voice_register_title: 'બોલીને તમારી પ્રોફાઇલ બનાવો',
-    voice_register_subtitle: 'તમારી ભાષામાં જણાવો: તમારું નામ, કામ, અનુભવ અને શહેર.',
-    tap_to_speak: 'બોલવા માટે દબાવો',
-    recording: 'રેકોર્ડિંગ ચાલુ છે...',
-    stop_recording: 'અટકાવો અને સબમિટ કરો',
-    re_record: 'ફરીથી બોલો',
-    confirm_profile: 'વિગતો ચકાસો',
-    name_label: 'પૂરું નામ',
-    skill_label: 'મુખ્ય કામ',
-    exp_label: 'અનુભવ (વર્ષ)',
-    location_label: 'શહેર / જિલ્લો',
-    phone_label: 'મોબાઇલ નંબર',
-    save_profile: 'સેવ કરો અને કામ મેળવો',
-    available_now: 'કામ માટે તૈયાર',
-    busy_now: 'હાલ વ્યસ્ત',
-    pending_offers: 'નવા કામની ઓફર',
-    accept_job: 'સ્વીકારો',
-    decline_job: 'નકારો',
-    earnings_total: 'કુલ કમાણી',
-    reputation_score: 'રેટિંગ સ્કોર',
-    jobs_done: 'પૂર્ણ થયેલા કામ',
-    search_placeholder: 'ઇલેક્ટ્રિશિયન, પ્લમ્બર શોધો...',
-    hire_now: 'કામે રાખો',
-    view_profile: 'પ્રોફાઇલ જુઓ',
-    ranking_score: 'મેચ સ્કોર',
-    aadhaar_verified: 'આધાર પ્રમાણિત',
-    skill_badge: 'પ્રમાણિત કારીગર',
-    whatsapp_bot: 'વ્હોટ્સએપ બોટ',
-    ivr_sim: 'આઇવીઆર સિમ્યુલેટર',
-    demo_logins: 'ડેમો લોગિન'
+    Electrician: 'ઇલેક્ટ્રિશિયન',
+    Plumber: 'પ્લમ્બર',
+    Mason: 'કડિયો / બાંધકામ કારીગર',
+    Painter: 'કલરકામ કારીગર',
+    Carpenter: 'સુથાર',
+    Welder: 'વેલ્ડર',
+    Driver: 'ડ્રાઈવર',
+    'Domestic Help': 'ઘરકામ સહાયક',
+    'AC Technician': 'એસી મિકેનિક',
+    'Tile & Marble Setter': 'ટાઇલ્સ અને માર્બલ કારીગર',
+    Gardener: 'માળી',
+    'Appliance Repair': 'સાધન સમારકામ કારીગર'
   },
   or: {
-    app_name: 'ସ୍କିଲବ୍ରିଜ୍',
-    tagline: 'ଶ୍ରମିକମାନଙ୍କ ପାଇଁ କଣ୍ଠସ୍ୱର ଚାଳିତ ନିଯୁକ୍ତି ମଞ୍ଚ',
-    listen_btn: 'ଶୁଣନ୍ତୁ',
-    role_worker: 'ଶ୍ରମିକ / କାରିଗର',
-    role_employer: 'ମାଲିକ / ଠିକାଦାର',
-    role_admin: 'ପ୍ରଶାସକ',
-    voice_register_title: 'କହି ନିଜ ପ୍ରୋଫାଇଲ୍ ତିଆରି କରନ୍ତୁ',
-    voice_register_subtitle: 'ନିଜ ଭାଷାରେ କୁହନ୍ତୁ: ନାମ, କାମ, ଅଭିଜ୍ଞତା ଓ ସହର।',
-    tap_to_speak: 'କହିବା ପାଇଁ ଦବାନ୍ତୁ',
-    recording: 'ରେକର୍ଡିଂ ହେଉଛି...',
-    stop_recording: 'ବନ୍ଦ କରନ୍ତୁ ଓ ଦାଖଲ କରନ୍ତୁ',
-    re_record: 'ପୁଣି କୁହନ୍ତୁ',
-    confirm_profile: 'ବିବରଣୀ ଯାଞ୍ଚ କରନ୍ତୁ',
-    name_label: 'ପୂରା ନାମ',
-    skill_label: 'ମୁଖ୍ୟ କାମ',
-    exp_label: 'ଅଭିଜ୍ଞତା (ବର୍ଷ)',
-    location_label: 'ସହର / ଜିଲ୍ଲା',
-    phone_label: 'ମୋବାଇଲ୍ ନମ୍ବର',
-    save_profile: 'ସଂରକ୍ଷଣ କରନ୍ତୁ',
-    available_now: 'କାମ ପାଇଁ ଉପଲବ୍ଧ',
-    busy_now: 'ବର୍ତ୍ତମାନ ବ୍ୟସ୍ତ',
-    pending_offers: 'ନୂଆ କାମ ଅଫର୍',
-    accept_job: 'ଗ୍ରହଣ କରନ୍ତୁ',
-    decline_job: 'ଅଗ୍ରାହ୍ୟ କରନ୍ତୁ',
-    earnings_total: 'ମୋଟ ରୋଜଗାର',
-    reputation_score: 'ସୁନାମ ସ୍କୋର',
-    jobs_done: 'ସମ୍ପନ୍ନ କାମ',
-    search_placeholder: 'ଇଲେକ୍ଟ୍ରିସିଆନ୍, ପ୍ଲମ୍ବର ଖୋଜନ୍ତୁ...',
-    hire_now: 'ନିଯୁକ୍ତି ଦିଅନ୍ତୁ',
-    view_profile: 'ପ୍ରୋଫାଇଲ୍ ଦେଖନ୍ତୁ',
-    ranking_score: 'ମ୍ୟାଚ୍ ସ୍କୋର',
-    aadhaar_verified: 'ଆଧାର ଯାଞ୍ଚ ହୋଇଛି',
-    skill_badge: 'ପ୍ରମାଣିତ କାରିଗର',
-    whatsapp_bot: 'ହ୍ୱାଟ୍ସଆପ୍ ବଟ୍',
-    ivr_sim: 'ଆଇଭିଆର୍ ଡାୟଲର୍',
-    demo_logins: 'ଡେମୋ ଲଗଇନ୍'
+    Electrician: 'ଇଲେକ୍ଟ୍ରିସିଆନ୍',
+    Plumber: 'ପ୍ଲମ୍ବର',
+    Mason: 'ରାଜମିସ୍ତ୍ରୀ',
+    Painter: 'ପେଣ୍ଟର',
+    Carpenter: 'ବଢ଼େଇ',
+    Welder: 'ୱେଲ୍ଡର',
+    Driver: 'ଡ୍ରାଇଭର',
+    'Domestic Help': 'ଘରୋଇ ସହାୟକ',
+    'AC Technician': 'ଏସି ମେକାନିକ',
+    'Tile & Marble Setter': 'ଟାଇଲ୍ସ ଓ ମାର୍ବଲ କାରିଗର',
+    Gardener: 'ମାଳୀ',
+    'Appliance Repair': 'ଉପକରଣ ମରାମତି'
   },
   pa: {
-    app_name: 'ਸਕਿੱਲਬ੍ਰਿਜ',
-    tagline: 'ਕਿਰਤੀਆਂ ਲਈ ਆਵਾਜ਼ ਅਧਾਰਤ ਰੋਜ਼ਗਾਰ ਪਲੇਟਫਾਰਮ',
-    listen_btn: 'ਸੁਣੋ',
-    role_worker: 'ਕਾਮਾ / ਕਾਰੀਗਰ',
-    role_employer: 'ਮਾਲਕ / ਠੇਕੇਦਾਰ',
-    role_admin: 'ਐਡਮਿਨ',
-    voice_register_title: 'ਬੋਲ ਕੇ ਆਪਣਾ ਪ੍ਰੋਫਾਈਲ ਬਣਾਓ',
-    voice_register_subtitle: 'ਆਪਣੀ ਬੋਲੀ ਵਿੱਚ ਦੱਸੋ: ਨਾਮ, ਹੁਨਰ, ਤਜਰਬਾ ਅਤੇ ਸ਼ਹਿਰ।',
-    tap_to_speak: 'ਬੋਲਣ ਲਈ ਦਬਾਓ',
-    recording: 'ਰਿਕਾਰਡਿੰਗ ਚੱਲ ਰਹੀ ਹੈ...',
-    stop_recording: 'ਰੋਕੋ ਅਤੇ ਦਰਜ ਕਰੋ',
-    re_record: 'ਦੁਬਾਰਾ ਬੋਲੋ',
-    confirm_profile: 'ਵੇਰਵੇ ਚੈੱਕ ਕਰੋ',
-    name_label: 'ਪੂਰਾ ਨਾਮ',
-    skill_label: 'ਮੁੱਖ ਕੰਮ',
-    exp_label: 'ਤਜਰਬਾ (ਸਾਲ)',
-    location_label: 'ਸ਼ਹਿਰ / ਜ਼ਿਲ੍ਹਾ',
-    phone_label: 'ਮੋਬਾਈਲ ਨੰਬਰ',
-    save_profile: 'ਸੰਭਾਲੋ ਅਤੇ ਕੰਮ ਲਵੋ',
-    available_now: 'ਕੰਮ ਲਈ ਤਿਆਰ',
-    busy_now: 'ਰੁੱਝੇ ਹੋਏ',
-    pending_offers: 'ਨਵੇਂ ਕੰਮ ਦੀਆਂ ਪੇਸ਼ਕਸ਼ਾਂ',
-    accept_job: 'ਮਨਜ਼ੂਰ ਕਰੋ',
-    decline_job: 'ਰੱਦ ਕਰੋ',
-    earnings_total: 'ਕੁੱਲ ਕਮਾਈ',
-    reputation_score: 'ਰੇਟਿੰਗ ਸਕੋਰ',
-    jobs_done: 'ਮੁਕੰਮਲ ਕੰਮ',
-    search_placeholder: 'ਇਲੈਕਟ੍ਰੀਸ਼ੀਅਨ, ਪਲੰਬਰ ਲੱਭੋ...',
-    hire_now: 'ਕੰਮ ਤੇ ਰੱਖੋ',
-    view_profile: 'ਪ੍ਰੋਫਾਈਲ ਵੇਖੋ',
-    ranking_score: 'ਮੈਚ ਸਕੋਰ',
-    aadhaar_verified: 'ਆਧਾਰ ਵੈਰੀਫਾਈਡ',
-    skill_badge: 'ਪ੍ਰਮਾਣਿਤ ਕਾਰੀਗਰ',
-    whatsapp_bot: 'ਵਟਸਐਪ ਬੋਟ',
-    ivr_sim: 'ਫੋਨ ਆਈਵੀਆਰ',
-    demo_logins: 'ਡੈਮੋ ਲੌਗਇਨ'
+    Electrician: 'ਇਲੈਕਟ੍ਰੀਸ਼ੀਅਨ',
+    Plumber: 'ਪਲੰਬਰ',
+    Mason: 'ਰਾਜਮਿਸਤਰੀ',
+    Painter: 'ਪੇਂਟਰ',
+    Carpenter: 'ਤਰਖਾਣ',
+    Welder: 'ਵੈਲਡਰ',
+    Driver: 'ਡਰਾਈਵਰ',
+    'Domestic Help': 'ਘਰੇਲੂ ਸਹਾਇਕ',
+    'AC Technician': 'ਏਸੀ ਮਕੈਨਿਕ',
+    'Tile & Marble Setter': 'ਟਾਈਲ ਅਤੇ ਮਾਰਬਲ ਮਿਸਤਰੀ',
+    Gardener: 'ਮਾਲੀ',
+    'Appliance Repair': 'ਉਪਕਰਣ ਮੁਰੰਮਤ'
   },
   ur: {
-    app_name: 'اسکل برج',
-    tagline: 'بھارت کے 50 کروڑ مزدوروں کے لیے صوتی روزگار پلیٹ فارم',
-    listen_btn: 'سنیں',
-    role_worker: 'کاریگر / مزدور',
-    role_employer: 'مالک / ٹھیکیدار',
-    role_admin: 'ایڈمن',
-    voice_register_title: 'بول کر اپنا پروفائل بنائیں',
-    voice_register_subtitle: 'اپنی زبان میں بتائیں: آپ کا نام، کام، تجربہ اور شہر۔',
-    tap_to_speak: 'بولنے کے لیے دبائیں',
-    recording: 'ریکارڈنگ جاری ہے...',
-    stop_recording: 'روکیں اور جمع کریں',
-    re_record: 'دوبارہ بولیں',
-    confirm_profile: 'تفصیلات کی تصدیق کریں',
-    name_label: 'پورا نام',
-    skill_label: 'اہم ہنر / کام',
-    exp_label: 'تجربہ (سال)',
-    location_label: 'شہر / ضلع',
-    phone_label: 'موبائل نمبر',
-    save_profile: 'محفوظ کریں اور کام پائیں',
-    available_now: 'کام کے لیے دستیاب',
-    busy_now: 'فی الحال مصروف',
-    pending_offers: 'کام کی نئی پیشکشیں',
-    accept_job: 'قبول کریں',
-    decline_job: 'مسترد کریں',
-    earnings_total: 'کل کمائی',
-    reputation_score: 'شہرت اسکور',
-    jobs_done: 'مکمل شدہ کام',
-    search_placeholder: 'الیکٹریشن، پلمبر تلاش کریں...',
-    hire_now: 'کام پر رکھیں',
-    view_profile: 'پروفائل دیکھیں',
-    ranking_score: 'میچ اسکور',
-    aadhaar_verified: 'آدھار تصدیق شدہ',
-    skill_badge: 'سند یافتہ ہنر',
-    whatsapp_bot: 'واٹس ایپ بوٹ',
-    ivr_sim: 'آئی وی آر ڈائلر',
-    demo_logins: 'ڈیمو لاگ ان'
+    Electrician: 'الیکٹریشن',
+    Plumber: 'پلمبر',
+    Mason: 'راج مستری',
+    Painter: 'پینٹر / رنگ ساز',
+    Carpenter: 'بڑھئی / کارپینٹر',
+    Welder: 'ویلڈر',
+    Driver: 'ڈرائیور',
+    'Domestic Help': 'گھریلو مددگار',
+    'AC Technician': 'اے سی ٹیکنیشن',
+    'Tile & Marble Setter': 'ٹائل اور ماربل مستری',
+    Gardener: 'مالی',
+    'Appliance Repair': 'آلات کی مرمت'
   }
 };
 
-export function getTranslation(key: string, lang: LanguageCode = 'en'): string {
-  const langDict = TRANSLATIONS[lang] || TRANSLATIONS.en;
-  return langDict[key] || TRANSLATIONS.en[key] || key;
+export function getLocalizedTrade(tradeName: string, lang: LanguageCode = 'hi'): string {
+  const dict = TRADE_LOCALIZATIONS[lang] || TRADE_LOCALIZATIONS.en;
+  return dict[tradeName] || tradeName;
+}
+
+// Direction helper: RTL for Urdu, LTR for the other 11
+export function getLanguageDirection(lang: LanguageCode): 'rtl' | 'ltr' {
+  return lang === 'ur' ? 'rtl' : 'ltr';
+}
+
+// Apply lang & dir to documentElement for full-browser accessibility
+export function applyDocumentLanguage(lang: LanguageCode): void {
+  if (typeof document === 'undefined') return;
+  const config = SUPPORTED_LANGUAGES.find((l) => l.code === lang) || SUPPORTED_LANGUAGES[0];
+  document.documentElement.lang = config.voiceLangCode;
+  document.documentElement.dir = getLanguageDirection(lang);
+}
+
+// Resolve nested dot-separated keys, with interpolation and English fallback
+export function getTranslation(
+  keyPath: string,
+  params?: Record<string, string | number>,
+  lang: LanguageCode = 'en'
+): string {
+  const resolve = (localeObj: Record<string, unknown>, pathStr: string): string | undefined => {
+    const parts = pathStr.split('.');
+    let current: unknown = localeObj;
+    for (const part of parts) {
+      if (current === undefined || current === null || typeof current !== 'object') {
+        return undefined;
+      }
+      current = (current as Record<string, unknown>)[part];
+    }
+    return typeof current === 'string' ? current : undefined;
+  };
+
+  const targetLocale = LOCALES[lang] || LOCALES.en;
+  let text = resolve(targetLocale, keyPath);
+
+  // Fallback to English if missing or not translated
+  if (!text) {
+    text = resolve(LOCALES.en, keyPath);
+    if (!text) {
+      // Legacy flat key fallback if present in old dictionary
+      const flatTarget = targetLocale as Record<string, string>;
+      const flatEn = LOCALES.en as Record<string, string>;
+      text = flatTarget[keyPath] || flatEn[keyPath] || keyPath;
+    }
+  }
+
+  // Interpolate {{param}} placeholders
+  if (params && typeof text === 'string') {
+    text = text.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (_, varName) => {
+      return varName in params ? String(params[varName]) : `{{${varName}}}`;
+    });
+  }
+
+  return text || keyPath;
+}
+
+// Export shorthand t function
+export const t = getTranslation;
+
+// React Hook for component state integration
+export function useTranslation() {
+  const currentLang = useAppStore((state) => state.currentLang);
+
+  const translate = useCallback(
+    (keyPath: string, params?: Record<string, string | number>) => {
+      return getTranslation(keyPath, params, currentLang);
+    },
+    [currentLang]
+  );
+
+  const localizedTrade = useCallback(
+    (trade: string) => {
+      return getLocalizedTrade(trade, currentLang);
+    },
+    [currentLang]
+  );
+
+  return {
+    t: translate,
+    currentLang,
+    getLocalizedTrade: localizedTrade,
+    isRTL: currentLang === 'ur'
+  };
 }
 
 // Low-literacy Text-To-Speech helper
-export function speakVernacular(text: string, lang: LanguageCode = 'en'): Promise<void> {
+export function speakVernacular(text: string, lang: LanguageCode = 'hi'): Promise<void> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       resolve();
       return;
     }
 
-    window.speechSynthesis.cancel(); // stop current utterance
-    const utterance = new SpeechSynthesisUtterance(text);
-    const langConfig = SUPPORTED_LANGUAGES.find((l) => l.code === lang) || SUPPORTED_LANGUAGES[0];
-    utterance.lang = langConfig.voiceLangCode;
-    utterance.rate = 0.95; // comfortable cadence for informal workers
-    utterance.pitch = 1.0;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const langConfig = SUPPORTED_LANGUAGES.find((l) => l.code === lang) || SUPPORTED_LANGUAGES[0];
+      utterance.lang = langConfig.voiceLangCode;
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
 
-    // Try finding matching voice
-    const voices = window.speechSynthesis.getVoices();
-    const matchingVoice = voices.find(
-      (v) => v.lang.startsWith(langConfig.code) || v.lang === langConfig.voiceLangCode
-    );
-    if (matchingVoice) {
-      utterance.voice = matchingVoice;
+      const voices = window.speechSynthesis.getVoices();
+      const matchingVoice = voices.find(
+        (v) => v.lang.startsWith(langConfig.code) || v.lang === langConfig.voiceLangCode
+      );
+      if (matchingVoice) {
+        utterance.voice = matchingVoice;
+      }
+
+      utterance.onend = () => resolve();
+      utterance.onerror = () => resolve();
+
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      resolve();
     }
-
-    utterance.onend = () => resolve();
-    utterance.onerror = () => resolve();
-
-    window.speechSynthesis.speak(utterance);
   });
 }
