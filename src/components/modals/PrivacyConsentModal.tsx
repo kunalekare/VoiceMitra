@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { X, ShieldCheck, Check, Trash2, Lock, FileText, AlertCircle } from 'lucide-react';
+import { X, Check, Trash2, Lock } from 'lucide-react';
 import { useAppStore } from '../../store';
+import { useTranslation } from '../../i18n';
 
 export const PrivacyConsentModal: React.FC = () => {
   const { closeModal } = useAppStore();
+  const { t } = useTranslation();
   const [dataDeleted, setDataDeleted] = useState(false);
   const [purposes, setPurposes] = useState({
     voiceMatch: true,
@@ -25,6 +27,7 @@ export const PrivacyConsentModal: React.FC = () => {
         <button
           onClick={closeModal}
           className="absolute right-4 top-4 rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          aria-label={t('common.close')}
         >
           <X className="h-5 w-5" />
         </button>
@@ -35,10 +38,10 @@ export const PrivacyConsentModal: React.FC = () => {
           </div>
           <div>
             <h3 className="text-lg font-black text-slate-900 dark:text-white">
-              Data Privacy & DPDP Act 2023 Consent
+              {t('privacyModal.modalTitle')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              India Digital Personal Data Protection Act Compliance
+              {t('legal.privacyTitle')}
             </p>
           </div>
         </div>
@@ -49,21 +52,21 @@ export const PrivacyConsentModal: React.FC = () => {
               <Check className="h-8 w-8" />
             </div>
             <h4 className="text-base font-bold text-slate-900 dark:text-white">
-              Data Deletion Request Processed
+              {t('common.success')}
             </h4>
             <p className="text-xs text-slate-500">
-              Your voice recordings, session tokens, and KYC hashes have been purged per the DPDP Act right to be forgotten.
+              {t('privacyModal.rightsList')}
             </p>
           </div>
         ) : (
           <div className="space-y-4 text-xs">
             <div className="rounded-2xl bg-amber-50 p-3.5 text-amber-900 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 leading-relaxed">
-              <strong>Statutory Disclosure:</strong> SkillBridge acts as a Data Fiduciary. We do not store raw Aadhaar numbers or biometrics. Voice recordings are processed in encrypted temporary memory solely for job matching and trade transcription.
+              <strong>{t('privacyModal.consentIntro')}</strong> {t('privacyModal.aadhaarNotice')}
             </div>
 
             <div className="space-y-2.5">
               <span className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
-                Consent Purposes (You can toggle any at will):
+                {t('privacyModal.rightsList')}:
               </span>
 
               <label className="flex items-start gap-2.5 p-2 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
@@ -74,8 +77,7 @@ export const PrivacyConsentModal: React.FC = () => {
                   className="mt-0.5 rounded text-orange-600 focus:ring-orange-500"
                 />
                 <div>
-                  <div className="font-bold text-slate-800 dark:text-slate-200">Voice Processing for AI Job Matching</div>
-                  <div className="text-[11px] text-slate-500">Transcribes your trade description into canonical skills for employers.</div>
+                  <div className="font-bold text-slate-800 dark:text-slate-200">{t('privacyModal.voiceNotice')}</div>
                 </div>
               </label>
 
@@ -87,8 +89,7 @@ export const PrivacyConsentModal: React.FC = () => {
                   className="mt-0.5 rounded text-orange-600 focus:ring-orange-500"
                 />
                 <div>
-                  <div className="font-bold text-slate-800 dark:text-slate-200">Employer Hiring & Phone Connect</div>
-                  <div className="text-[11px] text-slate-500">Allows confirmed employers to contact you via WhatsApp or phone call.</div>
+                  <div className="font-bold text-slate-800 dark:text-slate-200">{t('privacyModal.dataUsage')}</div>
                 </div>
               </label>
 
@@ -100,8 +101,7 @@ export const PrivacyConsentModal: React.FC = () => {
                   className="mt-0.5 rounded text-orange-600 focus:ring-orange-500"
                 />
                 <div>
-                  <div className="font-bold text-slate-800 dark:text-slate-200">Escrow-Style Held Wage Escrow & Disbursal (Sandbox)</div>
-                  <div className="text-[11px] text-slate-500">Holds your daily wages safely in platform escrow before work commences.</div>
+                  <div className="font-bold text-slate-800 dark:text-slate-200">{t('payment.escrowBadge')}</div>
                 </div>
               </label>
             </div>
@@ -113,7 +113,7 @@ export const PrivacyConsentModal: React.FC = () => {
                 className="flex items-center gap-1.5 text-red-600 hover:text-red-700 font-bold transition"
               >
                 <Trash2 className="h-4 w-4" />
-                <span>Delete My Data (Right to be Forgotten)</span>
+                <span>{t('common.clear')}</span>
               </button>
 
               <button
@@ -121,7 +121,7 @@ export const PrivacyConsentModal: React.FC = () => {
                 onClick={closeModal}
                 className="rounded-2xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-orange-500 transition"
               >
-                Save Preferences
+                {t('privacyModal.acceptButton')}
               </button>
             </div>
           </div>

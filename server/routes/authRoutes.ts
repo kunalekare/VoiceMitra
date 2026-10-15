@@ -104,6 +104,20 @@ authRouter.get('/me', authenticate, (req: Request, res: Response) => {
   return sendSuccess(req, res, user);
 });
 
+// Update preferred language
+authRouter.patch('/me/language', authenticate, (req: Request, res: Response) => {
+  const { language } = req.body;
+  if (!language) {
+    return sendError(req, res, 'INVALID_LANGUAGE', 'Language code is required', 400);
+  }
+  db.run('UPDATE users SET language = ?, preferred_language = ?, updated_at = datetime("now") WHERE id = ?;', [
+    language,
+    language,
+    req.user!.id
+  ]);
+  return sendSuccess(req, res, { language, preferred_language: language });
+});
+
 // Logout
 authRouter.post('/logout', (req: Request, res: Response) => {
   res.clearCookie('access_token');

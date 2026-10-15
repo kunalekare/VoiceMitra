@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Worker, Employer, UserRole, LanguageCode } from '../types';
 import { workersRepo, employersRepo, initDatabase } from '../services/db';
+import { applyDocumentLanguage, SUPPORTED_LANGUAGES } from '../i18n';
 
 interface AppState {
   // Auth
@@ -26,7 +27,7 @@ interface AppState {
   viewMode: 'grid' | 'map';
 
   // Modals & Simulators
-  activeModal: 'aadhaar' | 'quiz' | 'whatsapp' | 'ivr' | 'privacy' | 'razorpay' | null;
+  activeModal: 'aadhaar' | 'quiz' | 'whatsapp' | 'ivr' | 'privacy' | 'razorpay' | 'language' | null;
   modalData: unknown;
 
   // Actions
@@ -56,6 +57,29 @@ interface AppState {
 // Ensure database seeded
 initDatabase();
 
+// Detect initial preferred language
+const getInitialLanguage = (): LanguageCode => {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('skillbridge_preferred_language') as LanguageCode;
+      if (saved && SUPPORTED_LANGUAGES.some((l) => l.code === saved)) {
+        applyDocumentLanguage(saved);
+        return saved;
+      }
+      const navLang = (window.navigator?.language || '').toLowerCase();
+      const matched = SUPPORTED_LANGUAGES.find((l) => navLang.startsWith(l.code));
+      if (matched) {
+        applyDocumentLanguage(matched.code);
+        return matched.code;
+      }
+    } catch {
+      // Ignore storage access error
+    }
+  }
+  applyDocumentLanguage('hi');
+  return 'hi';
+};
+
 export const useAppStore = create<AppState>((set, get) => ({
   // Defaults
   isAuthenticated: false,
@@ -64,7 +88,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   currentEmployer: null,
   adminEmail: null,
 
-  currentLang: 'hi', // default Indian vernacular (Hindi), switcher available everywhere
+  currentLang: getInitialLanguage(),
   speechEnabled: true,
   theme: 'light',
 
@@ -191,7 +215,28 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
   },
 
-  setLanguage: (lang: LanguageCode) => set({ currentLang: lang }),
+  setLanguage: (lang: LanguageCode) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('skillbridge_preferred_language', lang);
+        localStorage.setItem('skillbridge_has_chosen_language', 'true');
+      } catch {}
+    }
+    applyDocumentLanguage(lang);
+    set({ currentLang: lang });
+
+    // Persist to user profile on server if authenticated
+    try {
+      if (get().isAuthenticated) {
+        fetch('/api/v1/users/me/language', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ language: lang })
+        }).catch(() => {});
+      }
+    } catch {}
+  },
   setSpeechEnabled: (enabled: boolean) => set({ speechEnabled: enabled }),
   toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
 

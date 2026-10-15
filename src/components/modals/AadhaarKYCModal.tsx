@@ -3,9 +3,11 @@ import { X, ShieldCheck, CheckCircle2, Award, FileText, ArrowRight, Lock } from 
 import { useAppStore } from '../../store';
 import { aadhaarDigiLockerService, DigiLockerCertificate } from '../../services/aadhaarDigiLockerService';
 import { workersRepo } from '../../services/db';
+import { useTranslation } from '../../i18n';
 
 export const AadhaarKYCModal: React.FC = () => {
   const { currentWorker, closeModal, refreshUserData } = useAppStore();
+  const { t } = useTranslation();
   const [step, setStep] = useState<'input' | 'otp' | 'success'>('input');
   const [aadhaarNumber, setAadhaarNumber] = useState('');
   const [maskedNumber, setMaskedNumber] = useState('');
@@ -98,10 +100,10 @@ export const AadhaarKYCModal: React.FC = () => {
           </div>
           <div>
             <h3 className="text-lg font-black text-slate-900 dark:text-white">
-              Aadhaar & DigiLocker e-KYC
+              {t('kyc.modalTitle')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Government Verified Craft Worker Badge
+              {t('kyc.modalSubtitle')}
             </p>
           </div>
         </div>
@@ -117,14 +119,14 @@ export const AadhaarKYCModal: React.FC = () => {
           <form onSubmit={handleRequestOtp} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Enter 12-Digit Aadhaar Number (आधार संख्या)
+                {t('kyc.aadhaarLabel')}
               </label>
               <input
                 type="text"
                 maxLength={12}
                 value={aadhaarNumber}
                 onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, ''))}
-                placeholder="उदा: 2345 6789 0123"
+                placeholder={t('kyc.aadhaarPlaceholder')}
                 className="w-full rounded-2xl border border-slate-300 p-3.5 text-base font-mono font-bold tracking-widest focus:border-emerald-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
@@ -132,7 +134,7 @@ export const AadhaarKYCModal: React.FC = () => {
             <div className="rounded-2xl bg-amber-50/70 p-3 text-[11px] leading-relaxed text-amber-900 dark:bg-slate-800 dark:text-amber-300 border border-amber-200/60 dark:border-slate-700 flex items-start gap-2">
               <Lock className="h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400 mt-0.5" />
               <span>
-                <strong>DPDP Act 2023 & Sandbox Notice:</strong> SkillBridge never saves your 12-digit number. We verify in sandbox mode using an encrypted peppered reference token.
+                {t('kyc.dpdpNotice')}
               </span>
             </div>
 
@@ -141,7 +143,7 @@ export const AadhaarKYCModal: React.FC = () => {
               disabled={loading}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-black text-white shadow-lg hover:bg-emerald-500 transition disabled:opacity-50"
             >
-              <span>{loading ? 'Sending Sandbox OTP...' : 'Send Aadhaar OTP (123456)'}</span>
+              <span>{loading ? t('common.loading') : t('kyc.sendOtp')}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
@@ -151,14 +153,14 @@ export const AadhaarKYCModal: React.FC = () => {
         {step === 'otp' && (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div className="text-center p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60">
-              <span className="text-xs text-slate-500">OTP sent for Aadhaar:</span>
+              <span className="text-xs text-slate-500">{t('auth.enterOtp')}:</span>
               <div className="font-mono font-bold text-base text-slate-900 dark:text-white">{maskedNumber}</div>
               <span className="text-[11px] text-emerald-600 font-semibold">(Test Demo OTP: 123456)</span>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Enter 6-Digit OTP
+                {t('kyc.enterOtp')}
               </label>
               <input
                 type="text"
@@ -175,7 +177,7 @@ export const AadhaarKYCModal: React.FC = () => {
               disabled={loading || otp.length < 6}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-black text-white shadow-lg hover:bg-emerald-500 transition disabled:opacity-50"
             >
-              <span>{loading ? 'Verifying with DigiLocker...' : 'Verify & Link Certificates'}</span>
+              <span>{loading ? t('common.loading') : t('kyc.verifyAadhaar')}</span>
               <CheckCircle2 className="h-4 w-4" />
             </button>
           </form>
@@ -190,10 +192,10 @@ export const AadhaarKYCModal: React.FC = () => {
 
             <div>
               <h4 className="text-lg font-black text-slate-900 dark:text-white">
-                Aadhaar e-KYC Verified!
+                {t('kyc.verifiedSuccess')}
               </h4>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                Your profile now carries the official <strong>Verified Pro (+10 ranking bonus)</strong> badge.
+                {t('kyc.verifiedBadge')}
               </p>
             </div>
 
@@ -201,7 +203,7 @@ export const AadhaarKYCModal: React.FC = () => {
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-left dark:border-slate-800 dark:bg-slate-800/60 space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                 <Award className="h-4 w-4" />
-                <span>DigiLocker Verified Certificates Found:</span>
+                <span>{t('kyc.digilockerTitle')}</span>
               </div>
               {certificates.map((cert, idx) => (
                 <div key={idx} className="flex items-start gap-2 text-xs border-t pt-2 dark:border-slate-700">
@@ -218,7 +220,7 @@ export const AadhaarKYCModal: React.FC = () => {
               onClick={closeModal}
               className="w-full rounded-2xl bg-orange-600 py-3 text-sm font-bold text-white shadow hover:bg-orange-500 transition"
             >
-              Done & Return to Profile
+              {t('common.close')}
             </button>
           </div>
         )}

@@ -13,6 +13,7 @@ import {
 import { Worker, Job } from '../types';
 import { useAppStore } from '../store';
 import { jobsRepo } from '../services/db';
+import { useTranslation } from '../i18n';
 
 interface HireFlowPageProps {
   initialWorker?: Worker;
@@ -26,6 +27,7 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
   onJobCreated
 }) => {
   const { currentEmployer, openModal } = useAppStore();
+  const { t, localizedTrade, localizedCurrency } = useTranslation();
 
   const [workerCount, setWorkerCount] = useState<number>(1);
   const [isGroupJob, setIsGroupJob] = useState<boolean>(false);
@@ -100,7 +102,7 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
         className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-orange-600 dark:text-slate-400"
       >
         <ArrowLeft className="h-4 w-4" />
-        <span>Back</span>
+        <span>{t('common.back')}</span>
       </button>
 
       <div className="rounded-3xl bg-white p-6 sm:p-8 shadow-xl border border-orange-100 dark:bg-slate-900 dark:border-slate-800 space-y-6">
@@ -111,12 +113,12 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
           </div>
           <div>
             <h2 className="text-xl font-black text-slate-900 dark:text-white">
-              Hire Craftsperson & Lock Escrow
+              {t('hire.hireTitle')}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {initialWorker
-                ? `Booking verified worker: ${initialWorker.name} (${initialWorker.primarySkill})`
-                : 'Direct hire form with live wage calculator'}
+                ? `${initialWorker.name} (${localizedTrade(initialWorker.primarySkill)})`
+                : t('hire.hireSubtitle')}
             </p>
           </div>
         </div>
@@ -152,7 +154,7 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
           {isGroupJob && (
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Number of Workers Needed (कामगारों की संख्या): {workerCount}
+                {t('hire.workerCard')}: {workerCount}
               </label>
               <input
                 type="range"
@@ -168,7 +170,7 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
           {/* Form Fields Grid */}
           <div className="grid sm:grid-cols-2 gap-4 text-xs font-bold text-slate-700 dark:text-slate-300">
             <div>
-              <label className="block mb-1">Daily Wage per Worker (₹/दिन)</label>
+              <label className="block mb-1">{t('hire.dailyWage')}</label>
               <input
                 type="number"
                 step={50}
@@ -179,7 +181,7 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
             </div>
 
             <div>
-              <label className="block mb-1">Duration in Days (दिनों की संख्या)</label>
+              <label className="block mb-1">{t('hire.durationDays')}</label>
               <input
                 type="number"
                 min={1}
@@ -191,7 +193,7 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
             </div>
 
             <div>
-              <label className="block mb-1">Work Start Date (शुरू करने की तिथि)</label>
+              <label className="block mb-1">{t('hire.startDate')}</label>
               <input
                 type="date"
                 value={startDate}
@@ -201,11 +203,11 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
             </div>
 
             <div>
-              <label className="block mb-1">Trade Category (हुनर)</label>
+              <label className="block mb-1">{t('hire.tradeRequired')}</label>
               <input
                 type="text"
                 disabled
-                value={skillRequired}
+                value={localizedTrade(skillRequired)}
                 className="w-full rounded-xl border border-slate-200 p-3 text-sm bg-slate-50 font-semibold dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
@@ -213,7 +215,7 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Job Description / Site Address (काम का विवरण)
+              {t('hire.hireSubtitle')}
             </label>
             <textarea
               rows={3}
@@ -226,22 +228,22 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
           {/* Live Cost Breakdown */}
           <div className="rounded-2xl bg-slate-50 p-4 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 space-y-2 text-xs">
             <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">
-              Live Price Breakdown
+              {t('hire.totalWage')}
             </span>
             <div className="flex justify-between">
               <span>
-                Wages (₹{dailyWage} × {durationDays} days × {workerCount} worker{workerCount > 1 ? 's' : ''}):
+                {t('hire.dailyWage')} ({localizedCurrency(dailyWage)} × {durationDays} {t('common.days')} × {workerCount}):
               </span>
-              <span className="font-bold text-slate-900 dark:text-white">₹{totalWage.toLocaleString('en-IN')}</span>
+              <span className="font-bold text-slate-900 dark:text-white">{localizedCurrency(totalWage)}</span>
             </div>
             <div className="flex justify-between text-slate-500">
-              <span>Platform Escrow Fee (Nodal Account Guarantee):</span>
-              <span className="font-semibold">₹{platformFeePerJob}</span>
+              <span>{t('hire.platformFee')}:</span>
+              <span className="font-semibold">{localizedCurrency(platformFeePerJob)}</span>
             </div>
             <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between text-sm font-black text-slate-900 dark:text-white">
-              <span>Total Payable to Escrow:</span>
+              <span>{t('hire.totalPayable')}:</span>
               <span className="text-orange-600 dark:text-orange-400">
-                ₹{totalAmount.toLocaleString('en-IN')}
+                {localizedCurrency(totalAmount)}
               </span>
             </div>
           </div>
@@ -250,7 +252,7 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
             type="submit"
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 py-4 text-sm font-black text-white shadow-xl hover:shadow-orange-500/25 active:scale-95 transition"
           >
-            <span>Proceed to Razorpay Checkout (₹{totalAmount})</span>
+            <span>{t('hire.proceedToPay')} ({localizedCurrency(totalAmount)})</span>
             <ArrowRight className="h-4 w-4" />
           </button>
         </form>

@@ -19,7 +19,18 @@
     "logout": "Sign Out",
     "welcome": "Welcome",
     "selectLang": "Choose Your Language",
-    "close": "Close"
+    "close": "Close",
+    "whatsappBot": "WhatsApp Bot",
+    "phoneIvr": "Phone IVR",
+    "voiceReaderOn": "Voice Reader ON (Tap to mute)",
+    "voiceReaderOff": "Voice Reader OFF",
+    "voiceAssistantEnabled": "Voice assistant enabled.",
+    "voiceAssistantDisabled": "Voice assistant disabled.",
+    "offlineBanner": "Offline Mode — Cached data and offline capabilities active",
+    "instantDemoLogin": "Instant Demo Login",
+    "platformKpis": "Platform KPIs & Fraud",
+    "analytics": "Funnel Analytics",
+    "developerApis": "B2B APIs"
   },
   "landing": {
     "heroBadge": "Govt ITI & Skill India Aligned • 100% Voice First",
@@ -100,7 +111,14 @@
     "listenSummary": "Listen to Summary",
     "successTitle": "Profile Created Successfully!",
     "successSubtitle": "Your profile is now live. Local contractors and households can discover and hire you.",
-    "viewDashboard": "Go to Worker Dashboard"
+    "viewDashboard": "Go to Worker Dashboard",
+    "spokenLanguage": "Spoken Language",
+    "originalScript": "Original Voice Transcript",
+    "englishTranslation": "English Translation for Employers",
+    "showTranslation": "Show English Translation",
+    "showOriginal": "Show Original Transcript",
+    "videoPortfolio": "Skill Video Showcase",
+    "videoPortfolioHint": "Upload a short 30-second work video to boost your hire chances by 3x"
   },
   "search": {
     "searchPlaceholder": "Search electrician, plumber, carpenter, painter...",
@@ -205,6 +223,68 @@
     "ratingsReviews": "Client Reviews",
     "performanceScore": "Reputation Score"
   },
+  "employerJobs": {
+    "pageTitle": "Employer Projects & Contracts",
+    "pageSubtitle": "Track active jobs, escrow funding, and rate completed craftsmanship.",
+    "allJobs": "All Jobs",
+    "activeTab": "Active Contracts",
+    "completedTab": "Completed",
+    "disputedTab": "In Dispute",
+    "markComplete": "Confirm Completion & Review",
+    "raiseDispute": "Report Problem",
+    "releaseEscrow": "Release Escrow Payment",
+    "reviewModalTitle": "Rate & Review Craftsman",
+    "ratingLabel": "Rating (1 to 5 Stars)",
+    "reviewComment": "Work Quality Review",
+    "submitReview": "Submit & Release Wages",
+    "noJobs": "No contracts found in this view.",
+    "jobId": "Job Ref #{{id}}",
+    "heldInEscrow": "Held in Escrow: ₹{{amount}}"
+  },
+  "workerProfile": {
+    "profileTitle": "Craftsman Profile & Credentials",
+    "contactWorker": "Contact Worker",
+    "hireNow": "Hire This Craftsman",
+    "verifiedCredentials": "ITI & Aadhaar Verified",
+    "audioIntro": "Voice Introduction",
+    "reviewsAndRatings": "Customer Reviews ({{count}})",
+    "workHistory": "Work History",
+    "portfolioVideos": "Work Showcase Video",
+    "skillBadges": "Verified Skill Badges",
+    "yearsOfExperience": "{{years}} Years Experience",
+    "memberSince": "Member Since {{year}}",
+    "completedProjects": "{{count}} Projects Completed"
+  },
+  "enterprise": {
+    "heroTitle": "Enterprise Workforce API & Bulk Hiring",
+    "heroSubtitle": "Deploy 50 to 500+ verified tradespeople simultaneously across Indian metro regions with guaranteed SLAs and consolidated GST invoicing.",
+    "bulkHiringTitle": "Bulk Workforce Deployment",
+    "bulkHiringDesc": "Dedicated project coordinators to staff commercial projects, real estate sites, and facility contracts.",
+    "slaTitle": "99.9% Fulfillment SLA",
+    "slaDesc": "Guaranteed worker replacement within 4 hours for any unfulfilled shifts.",
+    "escrowTitle": "Automated Escrow & Compliance",
+    "escrowDesc": "Consolidated monthly GST invoices with automated worker UPI payouts and zero legal friction.",
+    "requestDemo": "Schedule Enterprise Demo",
+    "contactSales": "Contact Corporate Sales"
+  },
+  "analytics": {
+    "pageTitle": "Workforce & Labor Analytics",
+    "pageSubtitle": "Live supply metrics, prevailing market wage benchmarks, and regional demand clusters.",
+    "totalWorkers": "Registered Tradespeople",
+    "completedJobs": "Completed Work Orders",
+    "avgWage": "Average Daily Wage",
+    "matchRate": "Voice Match Fulfillment Rate",
+    "topTrades": "Top In-Demand Trades",
+    "regionalSupply": "Regional Supply Distribution"
+  },
+  "unitTests": {
+    "pageTitle": "Algorithm & System Verification",
+    "pageSubtitle": "Automated test suite validating multi-factor ranking, escrow accounting, and i18n parity.",
+    "runAll": "Run All Test Suites",
+    "testsPassed": "{{passed}} of {{total}} Tests Passed",
+    "algorithmsTested": "Ranking Algorithm Invariants Verified",
+    "scoringBreakdown": "Scoring Weight Breakdown (Distance, Skill, Review, Wage, Experience)"
+  },
   "admin": {
     "adminTitle": "SkillBridge Operations & Trust Desk",
     "liveKpis": "System Key Performance Indicators",
@@ -255,6 +335,23 @@
     "slaAck": "Acknowledgement within 24 hours of ticket receipt.",
     "slaRes": "Full investigation and resolution within 15 calendar days.",
     "slaAppeal": "Appeals may be escalated to the Data Protection Board of India."
+  },
+  "privacyModal": {
+    "modalTitle": "Privacy Consent & DPDP Act Notice",
+    "consentIntro": "SkillBridge is built in full compliance with India's Digital Personal Data Protection (DPDP) Act 2023.",
+    "dataUsage": "Your phone number is used exclusively for OTP login and direct employer contact when booked.",
+    "aadhaarNotice": "Aadhaar e-KYC numbers are converted to one-way HMAC peppered tokens. Raw 12-digit numbers are never stored.",
+    "voiceNotice": "Voice recordings are used solely for skill extraction and employer intro listening. They are never sold.",
+    "rightsList": "You have the right to withdraw consent, correct profile data, or request permanent deletion at any time.",
+    "acceptButton": "I Understand & Consent",
+    "viewPolicy": "Read Full DPDP Privacy Policy"
+  },
+  "languageChooser": {
+    "modalTitle": "Choose Your Language • अपनी भाषा चुनें",
+    "modalSubtitle": "Available in 12 Indian Languages • Speak or tap to select",
+    "selectButton": "Continue in {{language}}",
+    "listenName": "Listen to pronunciation",
+    "suggested": "Suggested from your device"
   },
   "whatsapp": {
     "simulatorTitle": "WhatsApp Bot Simulator",

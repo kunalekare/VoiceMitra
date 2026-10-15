@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RankingBreakdown } from '../types';
 import { Info, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from '../i18n';
 
 interface RankingTooltipProps {
   breakdown: RankingBreakdown;
@@ -8,6 +9,7 @@ interface RankingTooltipProps {
 }
 
 export const RankingTooltip: React.FC<RankingTooltipProps> = ({ breakdown, size = 'md' }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   const getScoreColor = (score: number) => {
@@ -33,9 +35,9 @@ export const RankingTooltip: React.FC<RankingTooltipProps> = ({ breakdown, size 
         className={`group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold shadow-sm transition hover:scale-105 ${getScoreColor(
           breakdown.compositeScore
         )} ${size === 'sm' ? 'text-xs' : 'text-sm'}`}
-        aria-label={`Match score ${breakdown.compositeScore} out of 100`}
+        aria-label={`${t('search.compositeScore')}: ${breakdown.compositeScore}%`}
       >
-        <span>{breakdown.compositeScore}% Match</span>
+        <span>{breakdown.compositeScore}% {t('search.skillMatch')}</span>
         <Info className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
       </button>
 
@@ -49,7 +51,7 @@ export const RankingTooltip: React.FC<RankingTooltipProps> = ({ breakdown, size 
         >
           <div className="flex items-center justify-between border-b pb-2 mb-2 dark:border-slate-800">
             <span className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1">
-              Algorithm Score Breakdown
+              {t('search.compositeScore')}
             </span>
             <span
               className={`px-2 py-0.5 rounded font-black text-xs ${getScoreColor(
@@ -61,12 +63,12 @@ export const RankingTooltip: React.FC<RankingTooltipProps> = ({ breakdown, size 
           </div>
 
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2.5 leading-snug">
-            Composite ranking weighted for craft skill, distance, real employer ratings, and verified KYC.
+            {t('landing.rankingTitle')}
           </p>
 
           <div className="space-y-1.5 font-medium">
             <div className="flex justify-between items-center">
-              <span className="text-slate-600 dark:text-slate-300">Skill Match (40% max):</span>
+              <span className="text-slate-600 dark:text-slate-300">{t('search.skillMatch')} (40%):</span>
               <span className="font-bold text-orange-600 dark:text-orange-400">
                 {breakdown.skillMatchScore} / 40
               </span>
@@ -74,7 +76,7 @@ export const RankingTooltip: React.FC<RankingTooltipProps> = ({ breakdown, size 
 
             <div className="flex justify-between items-center">
               <span className="text-slate-600 dark:text-slate-300">
-                Proximity ({breakdown.distanceKm} km) (25% max):
+                {t('common.distance')} ({breakdown.distanceKm} km) (25%):
               </span>
               <span className="font-bold text-teal-600 dark:text-teal-400">
                 {breakdown.proximityScore} / 25
@@ -82,21 +84,21 @@ export const RankingTooltip: React.FC<RankingTooltipProps> = ({ breakdown, size 
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-slate-600 dark:text-slate-300">Reputation Rating (20% max):</span>
+              <span className="text-slate-600 dark:text-slate-300">{t('common.ratings')} (20%):</span>
               <span className="font-bold text-amber-600 dark:text-amber-400">
                 {breakdown.reputationScore} / 20
               </span>
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-slate-600 dark:text-slate-300">Job Experience (10% max):</span>
+              <span className="text-slate-600 dark:text-slate-300">{t('search.experience', { years: breakdown.experienceScore })}:</span>
               <span className="font-bold text-blue-600 dark:text-blue-400">
                 {breakdown.experienceScore} / 10
               </span>
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-slate-600 dark:text-slate-300">Immediate Availability (5% max):</span>
+              <span className="text-slate-600 dark:text-slate-300">{t('search.availableOnly')}:</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">
                 {breakdown.availabilityScore} / 5
               </span>
@@ -105,7 +107,7 @@ export const RankingTooltip: React.FC<RankingTooltipProps> = ({ breakdown, size 
             <div className="flex justify-between items-center pt-1 border-t dark:border-slate-800">
               <span className="text-slate-700 dark:text-slate-200 flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                Aadhaar KYC Bonus (+10):
+                {t('kyc.modalTitle')}:
               </span>
               <span
                 className={`font-bold ${
@@ -119,7 +121,7 @@ export const RankingTooltip: React.FC<RankingTooltipProps> = ({ breakdown, size 
 
           <div className="mt-2.5 pt-2 border-t text-[10px] text-slate-400 dark:border-slate-800 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3 text-teal-500 shrink-0" />
-            <span>Fair algorithm without biased bid boosting</span>
+            <span>{t('common.verified')}</span>
           </div>
         </div>
       )}

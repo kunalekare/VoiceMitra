@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { useAppStore } from './store';
 import { Worker } from './types';
+import { useTranslation, applyDocumentLanguage } from './i18n';
 
 // Modals
 import { AadhaarKYCModal } from './components/modals/AadhaarKYCModal';
@@ -10,6 +11,7 @@ import { RazorpayCheckoutModal } from './components/modals/RazorpayCheckoutModal
 import { WhatsAppBotModal } from './components/modals/WhatsAppBotModal';
 import { IVRSimulatorModal } from './components/modals/IVRSimulatorModal';
 import { PrivacyConsentModal } from './components/modals/PrivacyConsentModal';
+import { LanguageChooserModal } from './components/modals/LanguageChooserModal';
 
 // Pages
 import { LandingPage } from './pages/LandingPage';
@@ -29,11 +31,21 @@ import { UnitTestsPage } from './pages/UnitTestsPage';
 import { LegalCompliancePage } from './pages/LegalCompliancePage';
 
 export default function App() {
-  const { activeModal, openModal, theme, userRole, isAuthenticated } = useAppStore();
+  const { activeModal, openModal, closeModal, theme, userRole, isAuthenticated, currentLang } = useAppStore();
+  const { t } = useTranslation();
   const [currentTab, setCurrentTab] = useState<string>('home');
   const [legalSubTab, setLegalSubTab] = useState<'terms' | 'privacy' | 'grievance' | 'sandbox-disclaimer'>('privacy');
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>('w-ngp-01');
   const [hireTargetWorker, setHireTargetWorker] = useState<Worker | undefined>(undefined);
+
+  const [showFirstVisitModal, setShowFirstVisitModal] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return !localStorage.getItem('skillbridge_has_chosen_language');
+  });
+
+  useEffect(() => {
+    applyDocumentLanguage(currentLang);
+  }, [currentLang]);
 
   const openLegalPage = (subTab: 'terms' | 'privacy' | 'grievance' | 'sandbox-disclaimer') => {
     setLegalSubTab(subTab);
@@ -130,6 +142,19 @@ export default function App() {
         </main>
 
         {/* Global Modals */}
+        {showFirstVisitModal && (
+          <LanguageChooserModal
+            isFirstVisit={true}
+            isOpen={true}
+            onClose={() => setShowFirstVisitModal(false)}
+          />
+        )}
+        {(activeModal === 'language' || activeModal === 'languageChooser') && (
+          <LanguageChooserModal
+            isOpen={true}
+            onClose={() => closeModal()}
+          />
+        )}
         {activeModal === 'aadhaar' && <AadhaarKYCModal />}
         {activeModal === 'quiz' && <SkillQuizModal />}
         {activeModal === 'razorpay' && <RazorpayCheckoutModal />}
@@ -146,9 +171,9 @@ export default function App() {
                   SB
                 </div>
                 <div>
-                  <div className="font-black text-slate-900 dark:text-white">SkillBridge India</div>
+                  <div className="font-black text-slate-900 dark:text-white">{t('nav.brand')} India</div>
                   <div className="text-[11px] text-slate-500">
-                    Voice-Powered Hiring for India's 500 Million Informal Workers
+                    {t('nav.tagline')}
                   </div>
                 </div>
               </div>
@@ -159,49 +184,49 @@ export default function App() {
                   onClick={() => openLegalPage('privacy')}
                   className="hover:text-orange-600 transition"
                 >
-                  DPDP Act Privacy Policy
+                  {t('legal.privacyPolicy')}
                 </button>
                 <span>•</span>
                 <button
                   onClick={() => openLegalPage('terms')}
                   className="hover:text-orange-600 transition"
                 >
-                  Terms of Service
+                  {t('legal.terms')}
                 </button>
                 <span>•</span>
                 <button
                   onClick={() => openLegalPage('grievance')}
                   className="hover:text-orange-600 transition"
                 >
-                  Grievance Officer
+                  {t('legal.grievanceOfficer')}
                 </button>
                 <span>•</span>
                 <button
                   onClick={() => openLegalPage('sandbox-disclaimer')}
                   className="hover:text-amber-600 transition"
                 >
-                  Sandbox Disclosures
+                  {t('legal.disclaimer')}
                 </button>
                 <span>•</span>
                 <button
                   onClick={() => openModal('whatsapp')}
                   className="hover:text-emerald-600 transition"
                 >
-                  WhatsApp Bot
+                  {t('nav.whatsappBot')}
                 </button>
                 <span>•</span>
                 <button
                   onClick={() => openModal('ivr')}
                   className="hover:text-orange-600 transition"
                 >
-                  IVR Phone
+                  {t('nav.phoneIvr')}
                 </button>
                 <span>•</span>
                 <button
                   onClick={() => setCurrentTab('unit-tests')}
                   className="hover:text-teal-600 font-mono transition"
                 >
-                  Unit Tests
+                  {t('nav.tests')}
                 </button>
               </div>
             </div>

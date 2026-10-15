@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Worker } from '../types';
 import { computeRankingBreakdown } from '../utils/ranking';
+import { useTranslation, getLocalizedTrade, formatCurrency } from '../i18n';
 
 interface LeafletMapViewProps {
   workers: Worker[];
@@ -22,6 +23,7 @@ export const LeafletMapView: React.FC<LeafletMapViewProps> = ({
   selectedCity,
   onSelectWorker
 }) => {
+  const { t, currentLang } = useTranslation();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
@@ -104,7 +106,7 @@ export const LeafletMapView: React.FC<LeafletMapViewProps> = ({
       });
 
       L.marker([centerLat, centerLng], { icon: userIcon })
-        .bindPopup(`<b>Your Search Location</b><br/>${selectedCity} (${radiusKm} km radius)`)
+        .bindPopup(`<b>${t('common.search')}</b><br/>${selectedCity} (${radiusKm} km)`)
         .addTo(markersLayerRef.current);
 
       // Worker markers
@@ -150,19 +152,21 @@ export const LeafletMapView: React.FC<LeafletMapViewProps> = ({
 
         const marker = L.marker([worker.lat, worker.lng], { icon: workerIcon });
 
+        const localizedTrade = getLocalizedTrade(worker.primarySkill, currentLang);
+        const formattedWage = formatCurrency(worker.dailyWageExpected || 850, currentLang);
         const popupContent = document.createElement('div');
         popupContent.className = 'p-1 text-slate-800 dark:text-slate-100';
         popupContent.innerHTML = `
           <div style="font-family: inherit;">
             <div style="font-weight: 800; font-size: 13px; color: #ea580c;">${worker.name}</div>
-            <div style="font-size: 11px; font-weight: 600; color: #475569;">${worker.primarySkill} • ${worker.experienceYears} yrs exp</div>
+            <div style="font-size: 11px; font-weight: 600; color: #475569;">${localizedTrade} • ${worker.experienceYears} ${t('common.years')}</div>
             <div style="font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
               <span style="color: #f59e0b; font-weight: bold;">★ ${worker.reputationScore}</span>
               <span>•</span>
-              <span style="color: #0d9488; font-weight: bold;">${breakdown.distanceKm} km away</span>
+              <span style="color: #0d9488; font-weight: bold;">${breakdown.distanceKm} km</span>
             </div>
             <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-weight: bold; font-size: 12px;">₹${worker.dailyWageExpected || 850}/day</span>
+              <span style="font-weight: bold; font-size: 12px;">${formattedWage} / ${t('common.days')}</span>
               <button id="view-worker-${worker.id}" style="
                 background: #ea580c;
                 color: white;
@@ -172,7 +176,7 @@ export const LeafletMapView: React.FC<LeafletMapViewProps> = ({
                 font-size: 10px;
                 font-weight: bold;
                 cursor: pointer;
-              ">View & Hire</button>
+              ">${t('search.hireButton')}</button>
             </div>
           </div>
         `;
@@ -191,7 +195,7 @@ export const LeafletMapView: React.FC<LeafletMapViewProps> = ({
         }
       });
     }
-  }, [workers, targetSkill, centerLat, centerLng, radiusKm, selectedCity, onSelectWorker]);
+  }, [workers, targetSkill, centerLat, centerLng, radiusKm, selectedCity, onSelectWorker, currentLang, t]);
 
   return (
     <div className="relative h-[480px] w-full rounded-3xl overflow-hidden shadow-lg border border-orange-200 dark:border-slate-800">
@@ -200,15 +204,15 @@ export const LeafletMapView: React.FC<LeafletMapViewProps> = ({
       <div className="absolute bottom-3 left-3 z-10 rounded-2xl bg-white/90 backdrop-blur p-2.5 text-[11px] font-bold text-slate-800 shadow-lg border border-slate-200 dark:bg-slate-900/90 dark:text-slate-100 dark:border-slate-800 flex items-center gap-3">
         <div className="flex items-center gap-1.5">
           <span className="h-3 w-3 rounded-full bg-orange-600 inline-block" />
-          <span>Available Worker</span>
+          <span>{t('dashboard.availableStatus')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="h-3 w-3 rounded-full bg-slate-500 inline-block" />
-          <span>Busy / On Job</span>
+          <span>{t('dashboard.busyStatus')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="h-3 w-3 rounded-full bg-teal-600 inline-block" />
-          <span>Search Center</span>
+          <span>{t('common.search')}</span>
         </div>
       </div>
     </div>

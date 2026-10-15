@@ -18,6 +18,7 @@ import { VoicePlayer } from '../components/VoicePlayer';
 import { reviewsRepo, workersRepo } from '../services/db';
 import { computeRankingBreakdown } from '../utils/ranking';
 import { RankingTooltip } from '../components/RankingTooltip';
+import { useTranslation, formatCurrency, getLocalizedTrade } from '../i18n';
 
 interface WorkerProfilePageProps {
   workerId: string;
@@ -30,6 +31,7 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
   onBack,
   onHireWorker
 }) => {
+  const { t, currentLang } = useTranslation();
   const worker = workersRepo.getById(workerId) || workersRepo.getAll()[0];
   const [reviews, setReviews] = useState<Review[]>([]);
   const [llmSummary, setLlmSummary] = useState<{ english?: string; hindi?: string } | null>(null);
@@ -72,9 +74,10 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
     }
   }, [worker]);
 
-  if (!worker) return <div className="p-8 text-center">Worker not found.</div>;
+  if (!worker) return <div className="p-8 text-center">{t('common.loading')}</div>;
 
   const ranking = computeRankingBreakdown(worker, worker.primarySkill);
+  const localizedTrade = getLocalizedTrade(worker.primarySkill, currentLang);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 space-y-6 animate-fadeIn">
@@ -84,7 +87,7 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
         className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-orange-600 dark:text-slate-400"
       >
         <ArrowLeft className="h-4 w-4" />
-        <span>Back to Search Results</span>
+        <span>{t('common.back')}</span>
       </button>
 
       {/* Hero Header Card */}
@@ -106,10 +109,10 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
 
               <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-semibold">
                 <span className="font-bold text-orange-600 dark:text-orange-400">
-                  {worker.primarySkill}
+                  {localizedTrade}
                 </span>
                 <span>•</span>
-                <span>{worker.experienceYears} Years Experience</span>
+                <span>{t('workerProfile.yearsOfExperience', { years: worker.experienceYears })}</span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5" />
@@ -135,10 +138,10 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
           {/* Pricing & CTA */}
           <div className="flex flex-col items-start sm:items-end gap-2 w-full sm:w-auto">
             <div className="text-left sm:text-right">
-              <span className="text-xs text-slate-400">Expected Daily Wage</span>
+              <span className="text-xs text-slate-400">{t('voiceRegister.wageRate')}</span>
               <div className="text-2xl font-black text-slate-900 dark:text-white">
-                ₹{worker.dailyWageExpected || 850}
-                <span className="text-xs font-normal text-slate-500">/day</span>
+                {formatCurrency(worker.dailyWageExpected || 850, currentLang)}
+                <span className="text-xs font-normal text-slate-500"> / {t('common.days')}</span>
               </div>
             </div>
 
@@ -148,7 +151,7 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
               className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 px-7 py-3.5 text-sm font-black text-white shadow-lg hover:shadow-orange-500/25 active:scale-95 transition"
             >
               <Briefcase className="h-4 w-4" />
-              <span>Hire {worker.name.split(' ')[0]} Now</span>
+              <span>{t('workerProfile.hireNow')}</span>
             </button>
           </div>
         </div>
@@ -159,26 +162,34 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
         transcript={worker.voiceTranscript}
         audioUrl={worker.voiceProfileUrl}
         workerName={worker.name}
-        skillName={worker.primarySkill}
+        skillName={localizedTrade}
       />
 
       {/* Gemini AI Generated Summary */}
       <div className="rounded-3xl bg-gradient-to-br from-amber-50/60 to-orange-50/40 p-6 border border-orange-200 dark:bg-slate-900 dark:border-slate-800 space-y-2">
         <div className="flex items-center gap-2 text-xs font-bold text-orange-900 dark:text-orange-300">
           <Sparkles className="h-4 w-4 text-orange-600" />
-          <span>Gemini AI Verified Craftsmanship Summary</span>
+          <span>{t('workerProfile.verifiedCredentials')}</span>
         </div>
 
         {loadingSummary ? (
           <div className="py-2 text-xs text-slate-400 font-medium animate-pulse">
-            Generating bilingual craftsman profile summary...
+            {t('common.loading')}
           </div>
         ) : (
           <div className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-            {llmSummary?.english && <p className="font-medium">{llmSummary.english}</p>}
-            {llmSummary?.hindi && (
-              <p className="font-serif text-slate-600 dark:text-slate-400 italic">
-                "{llmSummary.hindi}"
+            {currentLang === 'en' ? (
+              llmSummary?.english && <p className="font-medium">{llmSummary.english}</p>
+            ) : (
+              llmSummary?.hindi && (
+                <p className="font-serif text-slate-600 dark:text-slate-400 italic">
+                  "{llmSummary.hindi}"
+                </p>
+              )
+            )}
+            {!llmSummary?.english && !llmSummary?.hindi && (
+              <p className="font-medium">
+                {worker.name} • {localizedTrade} • {worker.district}
               </p>
             )}
           </div>
@@ -189,7 +200,7 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
       <div className="grid md:grid-cols-2 gap-4">
         <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800 space-y-2">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Secondary Skills & Proficiencies
+            {t('workerProfile.skillBadges')}
           </h3>
           <div className="flex flex-wrap gap-1.5">
             {worker.secondarySkills && worker.secondarySkills.length > 0 ? (
@@ -198,18 +209,18 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
                   key={idx}
                   className="rounded-xl bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                 >
-                  {sk}
+                  {getLocalizedTrade(sk, currentLang)}
                 </span>
               ))
             ) : (
-              <span className="text-xs text-slate-400">Primary trade specialist</span>
+              <span className="text-xs text-slate-400">{localizedTrade}</span>
             )}
           </div>
         </div>
 
         <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800 space-y-2">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Languages Spoken (भाषाएँ)
+            {t('nav.language')}
           </h3>
           <div className="flex flex-wrap gap-1.5">
             {worker.languagesSpoken.map((lang, idx) => (
@@ -229,9 +240,9 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
         <div className="flex items-center justify-between border-b pb-3 dark:border-slate-800">
           <div>
             <h3 className="text-base font-black text-slate-900 dark:text-white">
-              Verified Employer Reviews ({reviews.length})
+              {t('workerProfile.reviewsAndRatings', { count: reviews.length })}
             </h3>
-            <p className="text-xs text-slate-400">Ratings submitted post-escrow release</p>
+            <p className="text-xs text-slate-400">{t('common.ratings')}</p>
           </div>
           <div className="flex items-center gap-1 font-black text-lg text-amber-500">
             <Star className="h-5 w-5 fill-current" />
@@ -241,7 +252,7 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
 
         {reviews.length === 0 ? (
           <div className="text-center py-6 text-xs text-slate-400">
-            New worker with initial verified baseline score of 5.0★. Be the first to hire and review!
+            {t('common.ratings')} (5.0★)
           </div>
         ) : (
           <div className="space-y-3">
@@ -259,15 +270,13 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                  "{rev.textReview}"
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  "{rev.comment}"
                 </p>
 
-                {rev.voiceTranscript && (
-                  <div className="mt-1 flex items-center gap-1.5 text-[11px] text-orange-700 dark:text-orange-400 font-serif italic">
-                    <span>Voice Transcript: "{rev.voiceTranscript}"</span>
-                  </div>
-                )}
+                <div className="text-[10px] text-slate-400">
+                  {new Date(rev.createdAt).toLocaleDateString()}
+                </div>
               </div>
             ))}
           </div>

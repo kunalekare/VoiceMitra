@@ -76,6 +76,7 @@ const apiV1 = express.Router();
 apiV1.use(standardLimiter);
 
 apiV1.use('/auth', authRouter);
+apiV1.use('/users', authRouter);
 apiV1.use('/workers', workerRouter);
 apiV1.use('/jobs', jobRouter);
 apiV1.use('/payments', paymentRouter);

@@ -1,1 +1,71 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-indic-devanagari: 'Noto Sans Devanagari', system-ui, sans-serif;
+    --font-indic-tamil: 'Noto Sans Tamil', system-ui, sans-serif;
+    --font-indic-telugu: 'Noto Sans Telugu', system-ui, sans-serif;
+    --font-indic-kannada: 'Noto Sans Kannada', system-ui, sans-serif;
+    --font-indic-malayalam: 'Noto Sans Malayalam', system-ui, sans-serif;
+    --font-indic-bengali: 'Noto Sans Bengali', system-ui, sans-serif;
+    --font-indic-gujarati: 'Noto Sans Gujarati', system-ui, sans-serif;
+    --font-indic-oriya: 'Noto Sans Oriya', system-ui, sans-serif;
+    --font-indic-gurmukhi: 'Noto Sans Gurmukhi', system-ui, sans-serif;
+    --font-indic-urdu: 'Noto Nastaliq Urdu', 'Noto Sans Arabic', system-ui, sans-serif;
+  }
+
+  html[lang^="hi"],
+  html[lang^="mr"] {
+    font-family: 'Noto Sans Devanagari', 'Plus Jakarta Sans', system-ui, sans-serif;
+    line-height: 1.6;
+  }
+
+  html[lang^="ta"] {
+    font-family: 'Noto Sans Tamil', 'Plus Jakarta Sans', system-ui, sans-serif;
+    line-height: 1.65;
+  }
+
+  html[lang^="te"] {
+    font-family: 'Noto Sans Telugu', 'Plus Jakarta Sans', system-ui, sans-serif;
+    line-height: 1.65;
+  }
+
+  html[lang^="kn"] {
+    font-family: 'Noto Sans Kannada', 'Plus Jakarta Sans', system-ui, sans-serif;
+    line-height: 1.65;
+  }
+
+  html[lang^="ml"] {
+    font-family: 'Noto Sans Malayalam', 'Plus Jakarta Sans', system-ui, sans-serif;
+    line-height: 1.65;
+  }
+
+  html[lang^="bn"] {
+    font-family: 'Noto Sans Bengali', 'Plus Jakarta Sans', system-ui, sans-serif;
+    line-height: 1.6;
+  }
+
+  html[lang^="gu"] {
+    font-family: 'Noto Sans Gujarati', 'Plus Jakarta Sans', system-ui, sans-serif;
+    line-height: 1.6;
+  }
+
+  html[lang^="or"] {
+    font-family: 'Noto Sans Oriya', 'Plus Jakarta Sans', system-ui, sans-serif;
+    line-height: 1.65;
+  }
+
+  html[lang^="pa"] {
+    font-family: 'Noto Sans Gurmukhi', 'Plus Jakarta Sans', system-ui, sans-serif;
+    line-height: 1.6;
+  }
+
+  html[lang^="ur"] {
+    font-family: 'Noto Nastaliq Urdu', 'Noto Sans Arabic', 'Plus Jakarta Sans', system-ui, sans-serif;
+    line-height: 2.1;
+  }
+
+  [dir="rtl"] {
+    text-align: right;
+  }
+}

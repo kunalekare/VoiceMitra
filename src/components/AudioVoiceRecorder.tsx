@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, Square, RotateCcw, Check, Sparkles, AlertCircle, Edit3, Volume2 } from 'lucide-react';
-import { VoiceRegistrationResult } from '../types';
+import { VoiceRegistrationResult, LanguageCode } from '../types';
 import { normalizeSkill } from '../utils/taxonomy';
+import { useTranslation, speakVernacular } from '../i18n';
+import { useAppStore } from '../store';
 
 interface AudioVoiceRecorderProps {
   onSuccess: (result: VoiceRegistrationResult, audioBlobUrl?: string) => void;
@@ -12,6 +14,9 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
   onSuccess,
   languageCode = 'hi'
 }) => {
+  const { t } = useTranslation();
+  const currentLang = useAppStore((state) => state.currentLang);
+  const effectiveLang = (languageCode || currentLang) as LanguageCode;
   const [isRecording, setIsRecording] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -170,7 +175,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
       const normalized = normalizeSkill(rawSkill);
 
       const result: VoiceRegistrationResult = {
-        name: data.name || 'कारीगर (Worker)',
+        name: data.name || 'कारीगर',
         primarySkill: normalized.canonical,
         secondarySkills: Array.isArray(data.secondarySkills) ? data.secondarySkills : [],
         experienceYears: Number(data.experienceYears) || 5,
@@ -186,7 +191,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
       const normalized = normalizeSkill(manualTextInput || 'Electrician');
       onSuccess(
         {
-          name: 'सुरेश कुमार (Suresh Kumar)',
+          name: 'सुरेश कुमार',
           primarySkill: normalized.canonical,
           secondarySkills: ['Appliance Repair'],
           experienceYears: 6,
@@ -201,6 +206,10 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
     }
   };
 
+  const handleListenGuidance = () => {
+    speakVernacular(t('voiceRegister.speakingGuidance'), effectiveLang);
+  };
+
   return (
     <div className="w-full rounded-3xl bg-white p-6 shadow-xl border border-orange-100 dark:bg-slate-900 dark:border-slate-800">
       {/* Visual Header */}
@@ -208,11 +217,22 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
         <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400">
           <Mic className="h-8 w-8 animate-pulse" />
         </div>
-        <h3 className="text-xl font-black text-slate-900 dark:text-white">
-          {isRecording ? 'Listening... Speak in Your Language' : 'Speak to Register Your Profile'}
-        </h3>
+        <div className="flex items-center justify-center gap-2">
+          <h3 className="text-xl font-black text-slate-900 dark:text-white">
+            {isRecording ? t('voiceRegister.recording') : t('voiceRegister.pageTitle')}
+          </h3>
+          <button
+            type="button"
+            onClick={handleListenGuidance}
+            title={t('common.listen')}
+            aria-label={t('common.listen')}
+            className="h-8 w-8 rounded-full bg-orange-50 hover:bg-orange-100 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-orange-600 dark:text-orange-400 transition"
+          >
+            <Volume2 className="h-4 w-4" />
+          </button>
+        </div>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
-          Say your name, your trade (e.g. Electrician, Plumber), how many years you've worked, and your city.
+          {t('voiceRegister.speakingGuidance')}
         </p>
       </div>
 
@@ -228,12 +248,12 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Type or paste what you would speak:
+              {t('voiceRegister.promptExampleTitle')}
             </label>
             <textarea
               value={manualTextInput}
               onChange={(e) => setManualTextInput(e.target.value)}
-              placeholder="उदा: मेरा नाम रमेश पवार है, मैं नागपुर से हूँ और 10 साल से इलेक्ट्रीशियन का काम करता हूँ।"
+              placeholder={t('voiceRegister.promptExample')}
               rows={3}
               className="w-full rounded-2xl border border-slate-300 p-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
@@ -245,7 +265,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
               onClick={() => setManualTextMode(false)}
               className="flex-1 rounded-xl border border-slate-300 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
             >
-              Use Microphone
+              {t('voiceRegister.step1')}
             </button>
             <button
               type="button"
@@ -254,7 +274,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
               className="flex-[2] flex items-center justify-center gap-2 rounded-xl bg-orange-600 py-2.5 text-xs font-bold text-white shadow hover:bg-orange-500 disabled:opacity-50"
             >
               <Sparkles className="h-4 w-4" />
-              <span>{isProcessing ? 'Extracting with Gemini...' : 'Extract Profile with AI'}</span>
+              <span>{isProcessing ? t('voiceRegister.processing') : t('voiceRegister.saveButton')}</span>
             </button>
           </div>
         </div>
@@ -275,14 +295,14 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
                     0:{timerSeconds.toString().padStart(2, '0')}
                   </span>
                   <span className="text-[11px] font-semibold tracking-wider text-orange-700 uppercase mt-1 animate-pulse">
-                    Recording Live Audio...
+                    {t('voiceRegister.recording')}
                   </span>
                 </div>
               </>
             ) : recordedBlob ? (
               <div className="flex flex-col items-center p-3 text-center">
                 <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1 flex items-center gap-1">
-                  <Check className="h-4 w-4" /> Voice Recorded Successfully ({timerSeconds}s)
+                  <Check className="h-4 w-4" /> {t('voiceRegister.successTitle')} ({timerSeconds}s)
                 </span>
                 {audioUrl && (
                   <audio controls src={audioUrl} className="h-8 max-w-xs mt-1" />
@@ -291,7 +311,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
             ) : (
               <div className="flex flex-col items-center text-slate-400">
                 <Mic className="h-8 w-8 mb-1 opacity-50" />
-                <span className="text-xs">Press the orange button to start speaking</span>
+                <span className="text-xs">{t('voiceRegister.tapToSpeak')}</span>
               </div>
             )}
           </div>
@@ -307,7 +327,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 group-hover:scale-110 transition">
                   <Mic className="h-5 w-5" />
                 </div>
-                <span>Tap to Speak (बोलना शुरू करें)</span>
+                <span>{t('voiceRegister.tapToSpeak')}</span>
               </button>
             )}
 
@@ -318,7 +338,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
                 className="flex items-center gap-2 rounded-full bg-red-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-red-500 active:scale-95 transition animate-pulse"
               >
                 <Square className="h-4 w-4 fill-current" />
-                <span>Stop Recording ({60 - timerSeconds}s left)</span>
+                <span>{t('voiceRegister.stopRecording')} ({60 - timerSeconds}s)</span>
               </button>
             )}
 
@@ -330,7 +350,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl border border-slate-300 py-3.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition"
                 >
                   <RotateCcw className="h-4 w-4" />
-                  <span>Re-record</span>
+                  <span>{t('voiceRegister.recordAgain')}</span>
                 </button>
 
                 <button
@@ -340,7 +360,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
                   className="flex-[2] flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-black text-white shadow-lg hover:bg-emerald-500 active:scale-95 transition disabled:opacity-50"
                 >
                   <Sparkles className="h-4 w-4" />
-                  <span>{isProcessing ? 'AI Transcribing & Analyzing...' : 'Analyze with Gemini AI'}</span>
+                  <span>{isProcessing ? t('voiceRegister.processing') : t('voiceRegister.confirmTitle')}</span>
                 </button>
               </div>
             )}
@@ -354,7 +374,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
               className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-orange-600 dark:text-slate-400"
             >
               <Edit3 className="h-3.5 w-3.5" />
-              <span>Or type/paste your details manually</span>
+              <span>{t('voiceRegister.step2')}</span>
             </button>
           </div>
         </div>

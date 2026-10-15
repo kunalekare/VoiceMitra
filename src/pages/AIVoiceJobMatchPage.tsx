@@ -19,6 +19,7 @@ import { Worker } from '../types';
 import { computeRankingBreakdown } from '../utils/ranking';
 import { RankingTooltip } from '../components/RankingTooltip';
 import { CITIES_COORDINATES } from '../data/seedData';
+import { useTranslation, speakVernacular } from '../i18n';
 
 interface AIVoiceJobMatchPageProps {
   onHireWorker: (worker: Worker) => void;
@@ -29,7 +30,8 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
   onHireWorker,
   onSelectWorkerForProfile
 }) => {
-  const { selectedCity } = useAppStore();
+  const { selectedCity, currentLang } = useAppStore();
+  const { t, localizedTrade, localizedCurrency } = useTranslation();
   const cityCoords = CITIES_COORDINATES[selectedCity] || CITIES_COORDINATES.Nagpur;
 
   const [isRecording, setIsRecording] = useState(false);
@@ -126,13 +128,13 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
       <div className="text-center max-w-2xl mx-auto space-y-2">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3.5 py-1 text-xs font-black text-orange-900 border border-orange-200 dark:bg-orange-950 dark:text-orange-200 dark:border-orange-800">
           <Sparkles className="h-4 w-4 text-orange-600" />
-          <span>Multimodal Gemini 3.8 Flash Agent</span>
+          <span>Multimodal Gemini 3.8 Flash • 12 Indian Languages</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
-          AI Voice Job Matching
+          {t('search.title')}
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Speak your requirements naturally in English, Hindi, Marathi or Tamil. We extract the trade, timeline, budget, and rank the top 10 candidates with reasoning.
+          {t('search.subtitle')}
         </p>
       </div>
 
@@ -148,7 +150,7 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
                 0:0{timerSeconds}
               </div>
               <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                Listening to requirement... Speak trade, location, duration, and budget.
+                {t('voiceRegister.recording')}
               </p>
             </div>
           ) : recordedAudio ? (
@@ -157,7 +159,7 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
                 <CheckCircle2 className="h-7 w-7" />
               </div>
               <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                Voice Requirement Captured (Audio buffer ready)
+                {t('voiceRegister.successTitle')}
               </p>
             </div>
           ) : (
@@ -166,7 +168,7 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
                 <Mic className="h-7 w-7" />
               </div>
               <p className="text-xs text-slate-500">
-                Press the button below to speak, or use sample requirement text.
+                {t('search.speakQuery')}
               </p>
             </div>
           )}
@@ -179,7 +181,7 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
                 className="flex items-center gap-2 rounded-2xl bg-orange-600 px-6 py-3.5 text-xs font-black text-white shadow-lg hover:bg-orange-500 active:scale-95 transition"
               >
                 <Mic className="h-4 w-4" />
-                <span>{recordedAudio ? 'Record Again' : 'Record Voice Requirement'}</span>
+                <span>{recordedAudio ? t('voiceRegister.recordAgain') : t('search.speakQuery')}</span>
               </button>
             )}
 
@@ -190,7 +192,7 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
               className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-7 py-3.5 text-xs font-black text-white shadow-lg hover:from-emerald-500 hover:to-teal-500 active:scale-95 transition disabled:opacity-50"
             >
               <Sparkles className="h-4 w-4" />
-              <span>{isProcessing ? 'Analyzing with Gemini...' : 'Analyze Requirement & Rank Top 10'}</span>
+              <span>{isProcessing ? t('voiceRegister.processing') : t('search.sortRelevance')}</span>
             </button>
           </div>
         </div>
@@ -198,7 +200,7 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
         {/* Quick Sample Presets for Demonstration */}
         <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-            Or try these pre-recorded sample requirements:
+            {t('voiceRegister.promptExampleTitle')}:
           </span>
           <div className="grid sm:grid-cols-2 gap-2 text-xs">
             <button
@@ -210,7 +212,7 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
               }}
               className="rounded-2xl border border-slate-200 p-3 text-left hover:border-orange-500 hover:bg-orange-50/50 dark:border-slate-700 dark:hover:bg-slate-800 transition"
             >
-              <div className="font-bold text-slate-900 dark:text-white">⚡ Electricians in Nagpur (4 Days)</div>
+              <div className="font-bold text-slate-900 dark:text-white">⚡ {localizedTrade('Electrician')} (Nagpur)</div>
               <div className="text-[11px] text-slate-500 mt-0.5 truncate">
                 "Need 2 electricians in Nagpur for 4 days warehouse wiring @ ₹900/day"
               </div>
@@ -225,7 +227,7 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
               }}
               className="rounded-2xl border border-slate-200 p-3 text-left hover:border-teal-500 hover:bg-teal-50/50 dark:border-slate-700 dark:hover:bg-slate-800 transition"
             >
-              <div className="font-bold text-slate-900 dark:text-white">💧 Urgent Plumber in Pune (2 Days)</div>
+              <div className="font-bold text-slate-900 dark:text-white">💧 {localizedTrade('Plumber')} (Pune)</div>
               <div className="text-[11px] text-slate-500 mt-0.5 truncate">
                 "Urgent plumber in Pune to fix tank leakage @ ₹800/day"
               </div>
@@ -240,11 +242,16 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-amber-300" />
-              <h3 className="font-black text-lg">AI Extracted Job Specification</h3>
+              <h3 className="font-black text-lg">{t('search.topMatches')}</h3>
             </div>
-            <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
-              Confidence: 98%
-            </span>
+            <button
+              type="button"
+              onClick={() => speakVernacular(extractedRequirement.description, currentLang)}
+              className="flex items-center gap-1 rounded-full bg-white/20 hover:bg-white/30 px-3 py-1 text-xs font-bold transition"
+            >
+              <Volume2 className="h-3.5 w-3.5" />
+              <span>{t('common.listen')}</span>
+            </button>
           </div>
 
           <p className="text-xs text-teal-100 font-medium leading-relaxed">
@@ -253,20 +260,20 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
             <div className="rounded-xl bg-white/10 p-2.5 backdrop-blur">
-              <span className="text-[10px] text-teal-200 uppercase font-bold">Trade Required</span>
-              <div className="font-black text-sm">{extractedRequirement.skillRequired}</div>
+              <span className="text-[10px] text-teal-200 uppercase font-bold">{t('voiceRegister.skillLabel')}</span>
+              <div className="font-black text-sm">{localizedTrade(extractedRequirement.skillRequired)}</div>
             </div>
             <div className="rounded-xl bg-white/10 p-2.5 backdrop-blur">
-              <span className="text-[10px] text-teal-200 uppercase font-bold">Urgency</span>
-              <div className="font-black text-sm capitalize">{extractedRequirement.urgency.replace('_', ' ')}</div>
+              <span className="text-[10px] text-teal-200 uppercase font-bold">{t('hire.durationDays')}</span>
+              <div className="font-black text-sm">{extractedRequirement.durationDays} {t('common.days')}</div>
             </div>
             <div className="rounded-xl bg-white/10 p-2.5 backdrop-blur">
-              <span className="text-[10px] text-teal-200 uppercase font-bold">Estimated Days</span>
-              <div className="font-black text-sm">{extractedRequirement.durationDays} Days</div>
+              <span className="text-[10px] text-teal-200 uppercase font-bold">{t('voiceRegister.wageLabel')}</span>
+              <div className="font-black text-sm">{localizedCurrency(extractedRequirement.dailyBudget)} / {t('common.days')}</div>
             </div>
             <div className="rounded-xl bg-white/10 p-2.5 backdrop-blur">
-              <span className="text-[10px] text-teal-200 uppercase font-bold">Daily Wage Budget</span>
-              <div className="font-black text-sm">₹{extractedRequirement.dailyBudget}/day</div>
+              <span className="text-[10px] text-teal-200 uppercase font-bold">{t('common.success')}</span>
+              <div className="font-black text-sm">98% Match</div>
             </div>
           </div>
         </div>
@@ -278,15 +285,12 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
           <div className="flex items-center justify-between border-b pb-3 dark:border-slate-800">
             <div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white">
-                Top 10 Ranked Candidates with AI Match Rationale
+                {t('search.topMatches')}
               </h3>
               <p className="text-xs text-slate-400">
-                Scored by the composite algorithm: skill (40%), proximity (25%), reputation (20%), exp (10%), avail (5%), KYC (+10).
+                {t('search.showingResults', { count: topMatchedWorkers.length })}
               </p>
             </div>
-            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-black text-orange-800 dark:bg-orange-950 dark:text-orange-300">
-              Ranked 1 to 10
-            </span>
           </div>
 
           <div className="space-y-3">
@@ -313,26 +317,36 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
                       {worker.aadhaarVerified && (
                         <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300">
                           <ShieldCheck className="h-3 w-3" />
-                          <span>Aadhaar Verified (+10)</span>
+                          <span>{t('kyc.verifiedBadge')} (+10)</span>
                         </span>
                       )}
                     </div>
 
                     <div className="flex items-center gap-3 text-xs text-slate-500 font-semibold">
-                      <span>{worker.primarySkill} ({worker.experienceYears} yrs exp)</span>
+                      <span>{localizedTrade(worker.primarySkill)} ({t('search.experienceYears', { years: worker.experienceYears })})</span>
                       <span>•</span>
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3.5 w-3.5 text-teal-600" />
-                        <span>{breakdown.distanceKm} km away</span>
+                        <span>{t('search.distanceAway', { distance: breakdown.distanceKm })}</span>
                       </span>
                       <span>•</span>
                       <span className="text-amber-500 font-bold">★ {worker.reputationScore}</span>
                     </div>
 
                     {/* AI Match Explanation Callout */}
-                    <div className="rounded-xl bg-orange-50/70 p-2.5 text-xs text-orange-950 dark:bg-orange-950/40 dark:text-orange-200 border border-orange-200/50 dark:border-orange-800/50 font-medium">
-                      <span className="font-bold">Why matched: </span>
-                      {explanation}
+                    <div className="rounded-xl bg-orange-50/70 p-2.5 text-xs text-orange-950 dark:bg-orange-950/40 dark:text-orange-200 border border-orange-200/50 dark:border-orange-800/50 font-medium flex items-center justify-between gap-2">
+                      <div>
+                        <span className="font-bold">{t('common.search')}: </span>
+                        {explanation}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => speakVernacular(explanation, currentLang)}
+                        className="h-7 w-7 shrink-0 rounded-full bg-white dark:bg-slate-800 hover:bg-orange-100 flex items-center justify-center text-orange-600 transition"
+                        title={t('common.listen')}
+                      >
+                        <Volume2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -340,9 +354,9 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
                 {/* Direct Action */}
                 <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 shrink-0">
                   <div className="text-right">
-                    <span className="text-[10px] text-slate-400">Rate</span>
+                    <span className="text-[10px] text-slate-400">{t('voiceRegister.wageLabel')}</span>
                     <div className="font-black text-base text-slate-900 dark:text-white">
-                      ₹{worker.dailyWageExpected || 850}/day
+                      {localizedCurrency(worker.dailyWageExpected || 850)} / {t('common.days')}
                     </div>
                   </div>
 
@@ -351,7 +365,7 @@ export const AIVoiceJobMatchPage: React.FC<AIVoiceJobMatchPageProps> = ({
                     onClick={() => onHireWorker(worker)}
                     className="rounded-2xl bg-orange-600 px-5 py-2.5 text-xs font-black text-white shadow hover:bg-orange-500 active:scale-95 transition"
                   >
-                    Hire Candidate
+                    {t('search.hire')}
                   </button>
                 </div>
               </div>

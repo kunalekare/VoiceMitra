@@ -15,11 +15,19 @@ export async function runMigrations(): Promise<void> {
         role TEXT NOT NULL CHECK(role IN ('worker', 'employer', 'admin')),
         employer_type TEXT CHECK(employer_type IN ('household', 'contractor', 'small_business', 'enterprise')),
         language TEXT NOT NULL DEFAULT 'hi',
+        preferred_language TEXT NOT NULL DEFAULT 'hi',
         status TEXT NOT NULL DEFAULT 'active',
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
     `);
+
+    // Ensure preferred_language exists for existing databases
+    try {
+      db.run(`ALTER TABLE users ADD COLUMN preferred_language TEXT DEFAULT 'hi';`);
+    } catch {
+      // Column already exists
+    }
 
     // 2. OTP Sessions (hashed otp, attempts, lockout, cooldown)
     db.run(`

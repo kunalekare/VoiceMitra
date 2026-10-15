@@ -17,13 +17,15 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../store';
 import { CANONICAL_SKILLS } from '../utils/taxonomy';
+import { useTranslation, getLocalizedTrade } from '../i18n';
 
 interface LandingPageProps {
   onNavigate: (tab: string) => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
-  const { loginAsWorker, loginAsEmployer, openModal } = useAppStore();
+  const { loginAsWorker, loginAsEmployer, openModal, currentLang } = useAppStore();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen space-y-16 pb-20">
@@ -36,20 +38,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3.5 py-1.5 text-xs font-black text-orange-900 border border-orange-200/80 dark:bg-orange-950/80 dark:text-orange-200 dark:border-orange-800 shadow-sm">
                 <span className="flex h-2 w-2 rounded-full bg-orange-600 animate-ping" />
-                <span>India's 1st Voice-First Workforce Infrastructure</span>
+                <span>{t('landing.heroBadge')}</span>
               </div>
 
               {/* Main Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15]">
-                Voice-Powered Hiring for India's{' '}
+                {t('landing.heroTitle1')}{' '}
                 <span className="bg-gradient-to-r from-orange-600 via-amber-600 to-teal-600 bg-clip-text text-transparent">
-                  500 Million
+                  {t('landing.heroTitleHighlight')}
                 </span>{' '}
-                Informal Workers.
+                {t('landing.heroTitle2')}
               </h1>
 
               <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto lg:mx-0 font-medium leading-relaxed">
-                Electricians, plumbers, masons, painters, and carpenters register by simply speaking in their mother tongue. Employers search, hear authentic voice profiles, hire, and disburse wages through escrow-style held payments (sandbox).
+                {t('landing.heroSubtitle')}
               </p>
 
               {/* Big Dual CTAs */}
@@ -60,7 +62,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                   className="w-full sm:w-auto flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 px-7 py-4 text-base font-black text-white shadow-xl shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-95 transition"
                 >
                   <Mic className="h-5 w-5 animate-pulse" />
-                  <span>Register by Speaking (बोलकर जुड़ें)</span>
+                  <span>{t('landing.ctaSpeakRegister')}</span>
                 </button>
 
                 <button
@@ -68,14 +70,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                   onClick={() => onNavigate('employer-dashboard')}
                   className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-300 bg-white px-7 py-4 text-base font-black text-slate-800 hover:border-orange-500 hover:text-orange-600 dark:border-slate-700 dark:bg-slate-900 dark:text-white shadow-sm transition"
                 >
-                  <span>Hire Verified Workers</span>
+                  <span>{t('landing.ctaPostJob')}</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
 
               {/* 1-Click Quick Demo Access Bar */}
               <div className="pt-4 border-t border-orange-200/60 dark:border-slate-800 text-xs font-semibold text-slate-500 flex flex-wrap items-center justify-center lg:justify-start gap-2">
-                <span className="font-bold text-slate-700 dark:text-slate-300">Instant Demo Login:</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">{t('auth.quickLogin')}:</span>
                 <button
                   onClick={() => {
                     loginAsWorker('w-ngp-01');
@@ -83,7 +85,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                   }}
                   className="rounded-lg bg-orange-100 px-2.5 py-1 text-orange-800 font-bold hover:bg-orange-200 dark:bg-orange-950 dark:text-orange-300 transition"
                 >
-                  ⚡ Worker (Rameshwar)
+                  ⚡ {t('auth.demoWorker')}
                 </button>
                 <button
                   onClick={() => {
@@ -92,7 +94,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                   }}
                   className="rounded-lg bg-teal-100 px-2.5 py-1 text-teal-800 font-bold hover:bg-teal-200 dark:bg-teal-950 dark:text-teal-300 transition"
                 >
-                  🏢 Employer (Sharma Builders)
+                  🏢 {t('auth.demoEmployer')}
                 </button>
                 <button
                   onClick={() => {
@@ -101,7 +103,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                   }}
                   className="rounded-lg bg-slate-200 px-2.5 py-1 text-slate-800 font-bold hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200 transition"
                 >
-                  🛡️ Admin / Ops
+                  🛡️ {t('auth.demoAdmin')}
                 </button>
               </div>
             </div>
@@ -113,7 +115,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                   <div className="flex items-center gap-2">
                     <span className="flex h-3 w-3 rounded-full bg-emerald-500 animate-ping" />
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                      Live Voice Registration Demo
+                      {t('voiceRegister.pageTitle')}
                     </span>
                   </div>
                   <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-bold text-teal-700 dark:bg-teal-950 dark:text-teal-300">
@@ -125,33 +127,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                 <div className="my-5 rounded-2xl bg-amber-50/70 p-4 border border-orange-200/60 dark:bg-slate-800/80 dark:border-slate-700 space-y-2">
                   <div className="flex items-center gap-2 text-xs font-bold text-orange-900 dark:text-orange-300">
                     <Volume2 className="h-4 w-4 text-orange-600" />
-                    <span>Spoken in Marathi / Hindi:</span>
+                    <span>{t('voiceRegister.promptExampleTitle')}</span>
                   </div>
                   <p className="font-serif text-sm italic text-slate-800 dark:text-slate-200 leading-relaxed">
-                    "मी नागपूरचा रामेश्वर पाटील. ९ वर्षे झाली इलेक्ट्रिशियन काम करतोय. घरगुती वायरिंग, एमसीबी आणि इन्व्हर्टरचे काम उत्तम करतो."
+                    "{t('voiceRegister.promptExample')}"
                   </p>
                 </div>
 
-                {/* AI Extracted JSON Highlights */}
+                {/* AI Extracted Highlights */}
                 <div className="space-y-2 rounded-2xl bg-slate-50 p-3.5 text-xs font-mono dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Structured Entity Extraction
+                    {t('voiceRegister.confirmTitle')}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">name:</span>
+                    <span className="text-slate-500">{t('voiceRegister.nameLabel')}:</span>
                     <span className="font-bold text-slate-900 dark:text-white">Rameshwar Patil</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">primarySkill:</span>
-                    <span className="font-bold text-orange-600 dark:text-orange-400">Electrician (98%)</span>
+                    <span className="text-slate-500">{t('voiceRegister.skillLabel')}:</span>
+                    <span className="font-bold text-orange-600 dark:text-orange-400">{getLocalizedTrade('Electrician', currentLang)} (98%)</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">experience:</span>
-                    <span className="font-bold text-slate-900 dark:text-white">9 Years</span>
+                    <span className="text-slate-500">{t('voiceRegister.expLabel')}:</span>
+                    <span className="font-bold text-slate-900 dark:text-white">9 {t('voiceRegister.expYearsUnit')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">location:</span>
-                    <span className="font-bold text-teal-600">Nagpur, Maharashtra</span>
+                    <span className="text-slate-500">{t('voiceRegister.locationLabel')}:</span>
+                    <span className="font-bold text-teal-600">Nagpur</span>
                   </div>
                 </div>
 
@@ -162,7 +164,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                   className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 py-3 text-xs font-black text-white shadow-md hover:bg-orange-500 transition"
                 >
                   <Mic className="h-4 w-4" />
-                  <span>Try Your Own Voice Now</span>
+                  <span>{t('voiceRegister.tapToSpeak')}</span>
                 </button>
               </div>
             </div>
@@ -174,13 +176,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="text-xs font-black uppercase tracking-widest text-orange-600 dark:text-orange-400">
-            Frictionless Low-Literacy Flow
+            {t('landing.heroBadge')}
           </span>
           <h2 className="mt-2 text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
-            How SkillBridge Works in 3 Steps
+            {t('landing.trustedHeading')}
           </h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Zero typing required. Designed specifically for vernacular-speaking tradesmen and busy contractors.
+            {t('landing.trustedSubtitle')}
           </p>
         </div>
 
@@ -190,10 +192,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400">
               <Mic className="h-7 w-7" />
             </div>
-            <span className="text-xs font-black text-orange-600 tracking-wider uppercase">Step 01</span>
-            <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white">1. Speak (बोलें)</h3>
+            <span className="text-xs font-black text-orange-600 tracking-wider uppercase">01</span>
+            <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white">{t('landing.step1Title')}</h3>
             <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-              Record 30 seconds via WhatsApp, phone IVR dialer, or our PWA. Speak in any of 12 Indian languages about your trade and experience.
+              {t('landing.step1Desc')}
             </p>
           </div>
 
@@ -202,10 +204,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-100 text-teal-600 dark:bg-teal-950 dark:text-teal-400">
               <ShieldCheck className="h-7 w-7" />
             </div>
-            <span className="text-xs font-black text-teal-600 tracking-wider uppercase">Step 02</span>
-            <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white">2. Get Verified (सत्यापित हों)</h3>
+            <span className="text-xs font-black text-teal-600 tracking-wider uppercase">02</span>
+            <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white">{t('landing.step2Title')}</h3>
             <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-              Aadhaar e-KYC (SHA-256 secure hash) and DigiLocker ITI / PMKVY certification fetch. Pass a 5-question voice quiz for a Verified Pro badge.
+              {t('landing.step2Desc')}
             </p>
           </div>
 
@@ -214,10 +216,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400">
               <Briefcase className="h-7 w-7" />
             </div>
-            <span className="text-xs font-black text-amber-600 tracking-wider uppercase">Step 03</span>
-            <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white">3. Get Hired (काम और भुगतान)</h3>
+            <span className="text-xs font-black text-amber-600 tracking-wider uppercase">03</span>
+            <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white">{t('landing.step3Title')}</h3>
             <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-              Contractors and households hear your voice profile and hire you. Wages are held securely in platform escrow-style protection (sandbox) and disbursed directly to UPI/bank.
+              {t('landing.step3Desc')}
             </p>
           </div>
         </div>
@@ -230,25 +232,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <div>
               <div className="text-3xl sm:text-4xl font-black tracking-tight">500M+</div>
               <div className="mt-1 text-xs font-semibold text-orange-100 uppercase tracking-wider">
-                Informal Workers Target
+                {t('landing.statsWorkers')}
               </div>
             </div>
             <div>
               <div className="text-3xl sm:text-4xl font-black tracking-tight">12</div>
               <div className="mt-1 text-xs font-semibold text-orange-100 uppercase tracking-wider">
-                Indian Vernacular Languages
+                {t('landing.statsJobs')}
               </div>
             </div>
             <div>
               <div className="text-3xl sm:text-4xl font-black tracking-tight">40+</div>
               <div className="mt-1 text-xs font-semibold text-orange-100 uppercase tracking-wider">
-                Canonical Trades & Skills
+                {t('landing.statsWage')}
               </div>
             </div>
             <div>
               <div className="text-3xl sm:text-4xl font-black tracking-tight">₹0</div>
               <div className="mt-1 text-xs font-semibold text-orange-100 uppercase tracking-wider">
-                Fee to Register for Workers
+                {t('landing.statsRating')}
               </div>
             </div>
           </div>
@@ -260,17 +262,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
           <div>
             <h3 className="text-2xl font-black text-slate-900 dark:text-white">
-              Explore Top Verified Trades
+              {t('landing.tradesHeading')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Skilled craftspersons available on demand across 7 major metro hubs.
+              {t('landing.tradesSubtitle')}
             </p>
           </div>
           <button
             onClick={() => onNavigate('employer-dashboard')}
             className="flex items-center gap-1.5 text-xs font-black text-orange-600 hover:text-orange-700 transition"
           >
-            <span>View All Trades in Your City</span>
+            <span>{t('landing.tradesHeading')}</span>
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -291,10 +293,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                    skill.canonical === 'Carpenter' ? '🪚' : '🛠️'}
                 </span>
               </div>
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white">{skill.canonical}</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5 font-serif">{skill.hindiName.split('/')[0]}</p>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">{getLocalizedTrade(skill.canonical, currentLang)}</h4>
               <span className="mt-2 inline-block text-[11px] font-black text-emerald-600 dark:text-emerald-400">
-                ₹{skill.baseDailyWageInr}/day avg
+                ₹{skill.baseDailyWageInr} / {t('common.days')}
               </span>
             </div>
           ))}

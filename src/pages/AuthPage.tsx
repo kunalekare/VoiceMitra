@@ -3,6 +3,7 @@ import { Phone, Lock, ArrowRight, ShieldCheck, UserCheck, Briefcase, RefreshCw, 
 import { useAppStore } from '../store';
 import { otpService } from '../services/msg91OtpService';
 import { UserRole, EmployerType } from '../types';
+import { useTranslation } from '../i18n';
 
 interface AuthPageProps {
   onSuccessNavigate: (tab: string) => void;
@@ -10,6 +11,7 @@ interface AuthPageProps {
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
   const { loginWithPhone, loginAsWorker, loginAsEmployer, loginAsAdmin } = useAppStore();
+  const { t } = useTranslation();
 
   const [step, setStep] = useState<'phone' | 'otp' | 'role_select'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -94,12 +96,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
             SB
           </div>
           <h2 className="text-2xl font-black text-slate-900 dark:text-white">
-            {step === 'role_select' ? 'Select Your Account Type' : 'Login to SkillBridge'}
+            {step === 'role_select' ? t('auth.selectRole') : t('auth.loginTitle')}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {step === 'role_select'
-              ? 'Tell us how you plan to use SkillBridge today'
-              : 'Mobile OTP Authentication (Mock SMS Gateway)'}
+              ? t('auth.selectRole')
+              : t('auth.loginSubtitle')}
           </p>
         </div>
 
@@ -115,7 +117,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Mobile Number (मोबाइल नंबर)
+                {t('auth.phoneLabel')}
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-3.5 text-sm font-bold text-slate-400">
@@ -126,7 +128,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
                   maxLength={10}
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                  placeholder="98220 11201"
+                  placeholder={t('auth.phonePlaceholder')}
                   className="w-full rounded-2xl border border-slate-300 py-3.5 pl-14 pr-4 text-base font-bold tracking-wider focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
@@ -137,7 +139,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
               disabled={loading}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 py-3.5 text-sm font-black text-white shadow-lg hover:bg-orange-500 active:scale-95 transition disabled:opacity-50"
             >
-              <span>{loading ? 'Sending SMS...' : 'Send OTP (Demo: 123456)'}</span>
+              <span>{loading ? t('common.loading') : t('auth.sendOtp')}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
@@ -147,12 +149,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
         {step === 'otp' && (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div className="rounded-2xl bg-amber-50 p-3 text-center text-xs text-amber-900 border border-amber-200 dark:bg-slate-800 dark:text-amber-300">
-              OTP sent to +91 {phoneNumber}. <strong>(Demo OTP is 123456)</strong>
+              {t('auth.otpSubtitle', { phone: `+91 ${phoneNumber}` })} <strong>(Demo OTP: 123456)</strong>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Enter 6-Digit OTP
+                {t('auth.enterOtp')}
               </label>
               <input
                 type="text"
@@ -169,13 +171,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
               disabled={loading || otp.length < 6}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-black text-white shadow-lg hover:bg-emerald-500 active:scale-95 transition disabled:opacity-50"
             >
-              <span>{loading ? 'Verifying OTP...' : 'Verify & Continue'}</span>
+              <span>{loading ? t('common.loading') : t('auth.verifyOtp')}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
 
             <div className="text-center pt-2">
               {resendTimer > 0 ? (
-                <span className="text-xs text-slate-400">Resend OTP in {resendTimer}s</span>
+                <span className="text-xs text-slate-400">{t('auth.resendCooldown', { seconds: resendTimer })}</span>
               ) : (
                 <button
                   type="button"
@@ -183,7 +185,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
                   className="inline-flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-700"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
-                  <span>Resend OTP to Phone</span>
+                  <span>{t('auth.resendOtp')}</span>
                 </button>
               )}
             </div>
@@ -207,7 +209,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
                   ⚡
                 </div>
                 <div>
-                  <div className="font-black text-sm">I am a Worker / Karigar (कामगार)</div>
+                  <div className="font-black text-sm">{t('auth.roleWorker')}</div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Electrician, plumber, mason, carpenter, painter, or driver seeking verified jobs.
                   </div>
@@ -227,7 +229,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
                   🏢
                 </div>
                 <div>
-                  <div className="font-black text-sm">I am an Employer / Contractor (मालिक)</div>
+                  <div className="font-black text-sm">{t('auth.roleEmployer')}</div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Hiring informal trade workers for households, construction sites, or enterprises.
                   </div>
@@ -269,7 +271,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
               onClick={handleCompleteLogin}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 py-3.5 text-sm font-black text-white shadow-lg hover:bg-orange-500 active:scale-95 transition"
             >
-              <span>Complete Setup & Enter Platform</span>
+              <span>{t('common.submit')}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -279,7 +281,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
         <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 space-y-2.5">
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider justify-center">
             <Sparkles className="h-3.5 w-3.5 text-orange-500" />
-            <span>Or 1-Click Instant Demo Login:</span>
+            <span>{t('auth.quickLogin')}</span>
           </div>
 
           <div className="grid grid-cols-1 gap-2">
@@ -291,7 +293,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
               }}
               className="flex items-center justify-between rounded-xl bg-orange-50 px-3.5 py-2.5 text-xs font-bold text-orange-900 border border-orange-200 hover:bg-orange-100 dark:bg-orange-950/60 dark:text-orange-200 dark:border-orange-800 transition"
             >
-              <span>⚡ Worker: Rameshwar Patil (Electrician, Nagpur)</span>
+              <span>⚡ {t('auth.demoWorker')}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
 
@@ -303,7 +305,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
               }}
               className="flex items-center justify-between rounded-xl bg-teal-50 px-3.5 py-2.5 text-xs font-bold text-teal-900 border border-teal-200 hover:bg-teal-100 dark:bg-teal-950/60 dark:text-teal-200 dark:border-teal-800 transition"
             >
-              <span>🏢 Employer: Sunil Sharma (Sharma Builders, Contractor)</span>
+              <span>🏢 {t('auth.demoEmployer')}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
 
@@ -315,7 +317,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccessNavigate }) => {
               }}
               className="flex items-center justify-between rounded-xl bg-slate-100 px-3.5 py-2.5 text-xs font-bold text-slate-800 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 transition"
             >
-              <span>🛡️ Admin: SkillBridge Operations & Fraud Queue</span>
+              <span>🛡️ {t('auth.demoAdmin')}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>

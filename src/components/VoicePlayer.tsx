@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Volume2, FileText, FastForward, RotateCcw } from 'lucide-react';
-import { speakVernacular } from '../i18n';
-import { useAppStore } from '../store';
+import { Play, Pause, Volume2, FileText } from 'lucide-react';
+import { speakVernacular, useTranslation } from '../i18n';
 
 interface VoicePlayerProps {
   transcript?: string;
@@ -13,16 +12,16 @@ interface VoicePlayerProps {
 
 export const VoicePlayer: React.FC<VoicePlayerProps> = ({
   transcript,
-  audioUrl,
+  audioUrl: _audioUrl,
   workerName = 'Worker',
-  skillName = 'Skill'
+  skillName: _skillName = 'Skill'
 }) => {
+  const { t, currentLang } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [playbackRate, setPlaybackRate] = useState<1 | 1.25 | 1.5>(1);
   const [showTranscript, setShowTranscript] = useState(false);
-  const [duration, setDuration] = useState(18); // default estimated seconds
-  const currentLang = useAppStore((s) => s.currentLang);
+  const duration = 18; // default estimated seconds
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -89,10 +88,10 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
           </div>
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-orange-950 dark:text-orange-200">
-              Verified Voice Profile
+              {t('workerProfile.audioIntro')}
             </h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Listen to {workerName} speaking in native dialect
+              {workerName} • {t('common.listen')}
             </p>
           </div>
         </div>
@@ -102,7 +101,7 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
             type="button"
             onClick={toggleSpeed}
             className="rounded-lg border border-orange-200 bg-white px-2 py-1 text-[11px] font-bold text-orange-800 hover:bg-orange-100 transition dark:border-slate-700 dark:bg-slate-800 dark:text-orange-300"
-            title="Change Playback Speed"
+            title={`${playbackRate}x`}
           >
             {playbackRate}x
           </button>
@@ -118,7 +117,7 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
               }`}
             >
               <FileText className="h-3 w-3" />
-              <span>Transcript</span>
+              <span>{t('voiceRegister.transcript')}</span>
             </button>
           )}
         </div>
@@ -130,7 +129,7 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
           type="button"
           onClick={handleTogglePlay}
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white shadow-md hover:bg-orange-500 active:scale-95 transition"
-          aria-label={isPlaying ? 'Pause voice profile' : 'Play voice profile'}
+          aria-label={isPlaying ? t('common.mute') : t('common.listen')}
         >
           {isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current ml-0.5" />}
         </button>
@@ -164,7 +163,7 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
         <div className="mt-3 rounded-xl bg-white p-3 text-xs leading-relaxed text-slate-800 border border-orange-200 dark:bg-slate-800/90 dark:text-slate-200 dark:border-slate-700 animate-fadeIn">
           <div className="flex items-center gap-1.5 font-bold text-orange-700 dark:text-orange-400 mb-1">
             <Volume2 className="h-3.5 w-3.5" />
-            <span>Spoken Voice Transcript:</span>
+            <span>{t('voiceRegister.transcript')}:</span>
           </div>
           <p className="italic font-serif">"{transcript}"</p>
         </div>
