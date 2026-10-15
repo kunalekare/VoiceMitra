@@ -1,0 +1,7 @@
+{
+  "name": "SkillBridge",
+  "description": "Voice-Powered Hiring Platform for India's 500 Million Informal Workers",
+  "requestFramePermissions": ["geolocation", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

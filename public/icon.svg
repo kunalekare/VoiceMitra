@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="sbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ea580c"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <!-- Background with rounded squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#sbGrad)" />
+  
+  <!-- Outer subtle sound wave rings -->
+  <circle cx="256" cy="230" r="160" fill="none" stroke="#ffffff" stroke-width="8" stroke-dasharray="16 16" opacity="0.3"/>
+  <circle cx="256" cy="230" r="120" fill="none" stroke="#ffffff" stroke-width="12" opacity="0.4"/>
+
+  <!-- Bridge Arch at bottom -->
+  <path d="M 96 420 Q 256 310 416 420" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round"/>
+  <path d="M 140 430 Q 256 345 372 430" fill="none" stroke="url(#goldGrad)" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Vertical Bridge Struts -->
+  <line x1="200" y1="358" x2="200" y2="430" stroke="#ffffff" stroke-width="8" opacity="0.8"/>
+  <line x1="256" y1="345" x2="256" y2="430" stroke="#ffffff" stroke-width="10" opacity="0.9"/>
+  <line x1="312" y1="358" x2="312" y2="430" stroke="#ffffff" stroke-width="8" opacity="0.8"/>
+
+  <!-- Central Microphone with Wrench/Skill motif -->
+  <!-- Mic capsule -->
+  <rect x="220" y="130" width="72" height="130" rx="36" fill="#ffffff"/>
+  <!-- Mic inner grille detail -->
+  <line x1="236" y1="170" x2="276" y2="170" stroke="#ea580c" stroke-width="6" stroke-linecap="round"/>
+  <line x1="236" y1="195" x2="276" y2="195" stroke="#ea580c" stroke-width="6" stroke-linecap="round"/>
+  <line x1="236" y1="220" x2="276" y2="220" stroke="#ea580c" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Mic cradle arc -->
+  <path d="M 188 220 C 188 300 324 300 324 220" fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="round"/>
+  
+  <!-- Mic stem -->
+  <line x1="256" y1="295" x2="256" y2="345" stroke="#ffffff" stroke-width="18" stroke-linecap="round"/>
+
+  <!-- Golden Stars of verification / Indian tricolor hint -->
+  <circle cx="160" cy="140" r="14" fill="#fbbf24"/>
+  <circle cx="352" cy="140" r="14" fill="#fbbf24"/>
+  <circle cx="256" cy="70" r="16" fill="#22c55e"/>
+</svg>
