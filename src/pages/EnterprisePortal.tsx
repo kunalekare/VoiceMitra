@@ -93,7 +93,7 @@ export const EnterprisePortal: React.FC = () => {
     doc.setFontSize(9);
     doc.setTextColor(120);
     doc.text('This is a computer-generated tax invoice verified under the IT Act 2000.', 14, 150);
-    doc.text('RBI Escrow Partner: Razorpay Payments Gateway nodal escrow account.', 14, 155);
+    doc.text('Payment Gateway Architecture: Razorpay Payments Gateway escrow-ready account.', 14, 155);
 
     doc.save(`SkillBridge_Tax_Invoice_${Date.now()}.pdf`);
   };

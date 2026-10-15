@@ -152,7 +152,7 @@ export const RazorpayCheckoutModal: React.FC = () => {
                   </h3>
                   <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold">
                     <ShieldCheck className="h-3.5 w-3.5" />
-                    <span>100% RBI Escrow Protected</span>
+                    <span>Escrow-Style Held Payment (Sandbox)</span>
                   </div>
                 </div>
               </div>
@@ -334,7 +334,7 @@ export const RazorpayCheckoutModal: React.FC = () => {
                 Payment Received & Escrow Activated!
               </h4>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-                ₹{data.totalWageInr} has been securely locked in RBI-compliant escrow. It will be disbursed to {data.workerNames.join(', ')} upon your final job sign-off.
+                ₹{data.totalWageInr} has been securely held in escrow-style protection (sandbox). It will be disbursed to {data.workerNames.join(', ')} upon your final job sign-off.
               </p>
             </div>
 

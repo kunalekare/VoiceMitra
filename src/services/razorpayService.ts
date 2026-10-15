@@ -98,7 +98,7 @@ export const razorpayService = {
 
     return {
       verified: true,
-      message: 'Payment verified and captured into RBI-compliant escrow account.'
+      message: 'Payment verified and captured into platform escrow-style protection (sandbox mode).'
     };
   },
 

@@ -51,18 +51,26 @@ export async function getDatabase(): Promise<Database> {
   return dbInstance;
 }
 
+function sanitizeParams(params: unknown[] = []): (number | string | null | Uint8Array)[] {
+  return params.map((p) => {
+    if (p === undefined || p === null) return null;
+    if (typeof p === 'boolean') return p ? 1 : 0;
+    return p as (number | string | Uint8Array);
+  });
+}
+
 // Database helper functions for standardized query execution
 export const db = {
   run: (sql: string, params: unknown[] = []): void => {
     if (!dbInstance) throw new Error('Database not initialized');
-    dbInstance.run(sql, params as (number | string | null | Uint8Array)[]);
+    dbInstance.run(sql, sanitizeParams(params));
     queueDatabaseSave();
   },
 
   query: <T = Record<string, unknown>>(sql: string, params: unknown[] = []): T[] => {
     if (!dbInstance) throw new Error('Database not initialized');
     const stmt = dbInstance.prepare(sql);
-    stmt.bind(params as (number | string | null | Uint8Array)[]);
+    stmt.bind(sanitizeParams(params));
     const results: T[] = [];
     while (stmt.step()) {
       results.push(stmt.getAsObject() as unknown as T);

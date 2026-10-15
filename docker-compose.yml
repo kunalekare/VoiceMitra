@@ -1,0 +1,22 @@
+services:
+  skillbridge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: skillbridge-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - JWT_SECRET=${JWT_SECRET:-skillbridge-super-secret-jwt-key-2026}
+      - REFRESH_SECRET=${REFRESH_SECRET:-skillbridge-super-secret-refresh-key-2026}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

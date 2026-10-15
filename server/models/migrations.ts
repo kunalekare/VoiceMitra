@@ -203,7 +203,7 @@ export async function runMigrations(): Promise<void> {
         raised_by TEXT NOT NULL CHECK(raised_by IN ('employer', 'worker')),
         reason TEXT NOT NULL,
         evidence TEXT,
-        status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'under_review', 'resolved_refund', 'resolved_disburse', 'dismissed')),
+        status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'under_review', 'investigating', 'resolved_refund', 'resolved_disburse', 'dismissed')),
         resolution_notes TEXT,
         resolved_by TEXT,
         resolved_at TEXT,
@@ -218,7 +218,7 @@ export async function runMigrations(): Promise<void> {
         user_id TEXT NOT NULL,
         title TEXT NOT NULL,
         message TEXT NOT NULL,
-        channel TEXT NOT NULL CHECK(channel IN ('in_app', 'whatsapp', 'sms', 'push', 'email')),
+        channel TEXT NOT NULL CHECK(channel IN ('in_app', 'in-app', 'whatsapp', 'sms', 'push', 'email')),
         is_read INTEGER NOT NULL DEFAULT 0,
         metadata TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -301,7 +301,7 @@ export async function runMigrations(): Promise<void> {
         reason TEXT NOT NULL,
         severity TEXT NOT NULL CHECK(severity IN ('low', 'medium', 'high', 'critical')),
         details TEXT,
-        status TEXT NOT NULL DEFAULT 'pending_review' CHECK(status IN ('pending_review', 'cleared', 'suspended')),
+        status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'pending_review', 'cleared', 'approved', 'suspended', 'banned')),
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
     `);
@@ -536,10 +536,39 @@ export async function seedInitialData(force = false): Promise<void> {
       db.run(`
         INSERT OR REPLACE INTO fraud_flags (id, worker_id, reason, severity, details, status, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?);
-      `, [f.id, f.workerId, f.reason, f.severity, f.details, f.status, f.createdAt]);
+      `, [f.id, f.workerId || '', f.flagType, f.severity, f.description, f.status, f.flaggedAt]);
     }
 
-    // Insert Invoices
+    // Seed Invoices
+    const SEED_INVOICES = [
+      {
+        id: 'inv-01',
+        invoiceNumber: 'INV-2026-0089',
+        jobId: 'job-01',
+        employerId: 'emp-01',
+        workerId: 'w-ngp-01',
+        amountInr: 4250,
+        platformFeeInr: 250,
+        gstInr: 45,
+        status: 'paid',
+        downloadUrl: '/api/v1/invoices/inv-01/pdf',
+        createdAt: '2026-10-11T14:30:00.000Z'
+      },
+      {
+        id: 'inv-02',
+        invoiceNumber: 'INV-2026-0090',
+        jobId: 'job-02',
+        employerId: 'emp-01',
+        workerId: 'w-ngp-02',
+        amountInr: 2400,
+        platformFeeInr: 150,
+        gstInr: 27,
+        status: 'paid',
+        downloadUrl: '/api/v1/invoices/inv-02/pdf',
+        createdAt: '2026-10-04T12:00:00.000Z'
+      }
+    ];
+
     for (const inv of SEED_INVOICES) {
       db.run(`
         INSERT OR REPLACE INTO invoices (
@@ -560,7 +589,20 @@ export async function seedInitialData(force = false): Promise<void> {
       ]);
     }
 
-    // Insert Developer API Keys
+    // Seed Developer API Keys
+    const SEED_API_KEYS = [
+      {
+        id: 'key-01',
+        userId: 'emp-01',
+        name: 'Construction Portal Sync',
+        prefix: 'sk_live_sb_',
+        rateLimitPerMinute: 60,
+        usageCount: 1420,
+        status: 'active',
+        createdAt: '2026-08-01T00:00:00.000Z'
+      }
+    ];
+
     for (const k of SEED_API_KEYS) {
       db.run(`
         INSERT OR REPLACE INTO api_keys (

@@ -12,43 +12,30 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { apiKeysRepo } from '../services/db';
-import { api } from '../services/apiClient';
 import { ApiKey } from '../types';
 
 export const DeveloperPortal: React.FC = () => {
-  const [keys, setKeys] = useState<any[]>(() => apiKeysRepo.getAll());
+  const [keys, setKeys] = useState<ApiKey[]>(() => apiKeysRepo.getAll());
   const [newKeyName, setNewKeyName] = useState('');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [justGeneratedKey, setJustGeneratedKey] = useState<string | null>(null);
 
   // Interactive Test Console State
-  const [selectedEndpoint, setSelectedEndpoint] = useState<string>('/api/v1/workers/search');
+  const [selectedEndpoint, setSelectedEndpoint] = useState<string>('/api/v1/search');
   const [testParamSkill, setTestParamSkill] = useState('Electrician');
   const [testParamCity, setTestParamCity] = useState('Nagpur');
   const [testConsoleOutput, setTestConsoleOutput] = useState<string | null>(null);
-  const [executing, setExecuting] = useState(false);
 
-  const handleCreateKey = async (e: React.FormEvent) => {
+  const handleCreateKey = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newKeyName.trim()) return;
-    try {
-      const created = await api.developer.createKey(newKeyName.trim());
-      setJustGeneratedKey(created.apiKey);
-      setKeys((prev) => [created, ...prev]);
-      setNewKeyName('');
-    } catch {
-      const local = apiKeysRepo.createKey(newKeyName.trim());
-      setKeys(apiKeysRepo.getAll());
-      setNewKeyName('');
-    }
+    const created = apiKeysRepo.createKey(newKeyName.trim());
+    setKeys(apiKeysRepo.getAll());
+    setNewKeyName('');
   };
 
-  const handleRevokeKey = async (id: string) => {
-    try {
-      await api.developer.revokeKey(id);
-    } catch {}
+  const handleRevokeKey = (id: string) => {
     apiKeysRepo.revokeKey(id);
-    setKeys((prev) => prev.filter((k) => k.id !== id));
+    setKeys(apiKeysRepo.getAll());
   };
 
   const handleCopy = (text: string, id: string) => {
@@ -57,25 +44,77 @@ export const DeveloperPortal: React.FC = () => {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const handleExecuteApiTest = async () => {
-    setExecuting(true);
-    setTestConsoleOutput('Calling live SkillBridge backend...');
-    try {
-      if (selectedEndpoint === '/api/v1/workers/search') {
-        const res = await api.workers.search({ skill: testParamSkill, district: testParamCity, limit: 5 });
-        setTestConsoleOutput(JSON.stringify(res, null, 2));
-      } else if (selectedEndpoint === '/api/v1/admin/metrics') {
-        const res = await api.admin.getMetrics();
-        setTestConsoleOutput(JSON.stringify(res, null, 2));
-      } else {
-        const res = await fetch(selectedEndpoint);
-        const data = await res.json();
-        setTestConsoleOutput(JSON.stringify(data, null, 2));
-      }
-    } catch (err: any) {
-      setTestConsoleOutput(JSON.stringify({ error: err.message }, null, 2));
-    } finally {
-      setExecuting(false);
+  const handleExecuteApiTest = () => {
+    if (selectedEndpoint === '/api/v1/search') {
+      setTestConsoleOutput(
+        JSON.stringify(
+          {
+            status: 'success',
+            endpoint: '/api/v1/search',
+            query: { skill: testParamSkill, city: testParamCity },
+            matchedCount: 3,
+            data: [
+              {
+                id: 'w-ngp-01',
+                name: 'Rameshwar Patil',
+                skill: 'Electrician',
+                experienceYears: 9,
+                compositeRanking: 96.5,
+                dailyWageInr: 850,
+                aadhaarVerified: true,
+                reputationScore: 4.9
+              },
+              {
+                id: 'w-ngp-02',
+                name: 'Santosh Kamble',
+                skill: 'Plumber',
+                experienceYears: 12,
+                compositeRanking: 84.0,
+                dailyWageInr: 800,
+                aadhaarVerified: true,
+                reputationScore: 4.8
+              }
+            ],
+            rateLimitRemaining: 119
+          },
+          null,
+          2
+        )
+      );
+    } else if (selectedEndpoint === '/api/v1/workers') {
+      setTestConsoleOutput(
+        JSON.stringify(
+          {
+            status: 'success',
+            endpoint: '/api/v1/workers',
+            totalWorkersInTaxonomy: 42,
+            supportedLanguages: 12,
+            sample: {
+              id: 'w-ngp-01',
+              name: 'Rameshwar Patil',
+              primarySkill: 'Electrician',
+              district: 'Nagpur',
+              reputation: 4.9
+            }
+          },
+          null,
+          2
+        )
+      );
+    } else {
+      setTestConsoleOutput(
+        JSON.stringify(
+          {
+            status: 'success',
+            endpoint: selectedEndpoint,
+            authenticatedAs: 'sk_live_sb_partner_9921',
+            timestamp: new Date().toISOString(),
+            message: 'Mock 200 OK Response'
+          },
+          null,
+          2
+        )
+      );
     }
   };
 
@@ -191,12 +230,11 @@ export const DeveloperPortal: React.FC = () => {
         {/* Endpoint Selector Tabs */}
         <div className="flex flex-wrap gap-1.5 text-xs font-mono font-bold">
           {[
-            { path: '/api/v1/workers/search', method: 'GET', desc: 'Search & Ranking' },
-            { path: '/api/v1/admin/metrics', method: 'GET', desc: 'Platform KPIs' },
-            { path: '/health', method: 'GET', desc: 'Server Health' },
-            { path: '/api/v1/jobs/hire', method: 'POST', desc: 'Create Escrow Job' },
-            { path: '/api/v1/payments/disburse', method: 'POST', desc: 'Disburse Wages' },
-            { path: '/api/v1/kyc/aadhaar/verify', method: 'POST', desc: 'Aadhaar Hash Verification' }
+            { path: '/api/v1/search', method: 'GET', desc: 'Search & Ranking' },
+            { path: '/api/v1/workers', method: 'GET', desc: 'Worker Profiles' },
+            { path: '/api/v1/jobs', method: 'POST', desc: 'Create Escrow Job' },
+            { path: '/api/v1/payments', method: 'POST', desc: 'Disburse Wages' },
+            { path: '/api/v1/kyc', method: 'POST', desc: 'Aadhaar Hash Verification' }
           ].map((ep) => (
             <button
               key={ep.path}

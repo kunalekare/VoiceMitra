@@ -41,50 +41,6 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate }) 
   const [reviewVoiceRecorded, setReviewVoiceRecorded] = useState(false);
   const [reviewText, setReviewText] = useState('काम वेळेवर पूर्ण झाले आणि पेमेंट मिळाले.');
 
-  // RazorpayX Payout states
-  const [showPayoutDrawer, setShowPayoutDrawer] = useState(false);
-  const [payoutUpi, setPayoutUpi] = useState(worker ? `${worker.phone.replace(/\D/g, '')}@okaxis` : '9822011201@okaxis');
-  const [disbursing, setDisbursing] = useState(false);
-  const [payoutSuccess, setPayoutSuccess] = useState(false);
-  const [payoutUtr, setPayoutUtr] = useState('');
-
-  const handleDisbursePayout = async () => {
-    if (!payoutUpi.trim()) return;
-    setDisbursing(true);
-    try {
-      const res = await fetch('/api/v1/payments/disburse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workerId: worker.id,
-          amountInr: 5000,
-          mode: 'upi',
-          destination: payoutUpi
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setPayoutUtr(data.data.utrNumber);
-      } else {
-        setPayoutUtr(`UTR-RZPX-${Date.now().toString().slice(-6)}8821`);
-      }
-      setPayoutSuccess(true);
-      setTimeout(() => {
-        setPayoutSuccess(false);
-        setShowPayoutDrawer(false);
-      }, 5000);
-    } catch {
-      setPayoutUtr(`UTR-RZPX-${Date.now().toString().slice(-6)}8821`);
-      setPayoutSuccess(true);
-      setTimeout(() => {
-        setPayoutSuccess(false);
-        setShowPayoutDrawer(false);
-      }, 5000);
-    } finally {
-      setDisbursing(false);
-    }
-  };
-
   useEffect(() => {
     if (worker) {
       const allJobs = jobsRepo.getByWorkerId(worker.id);
@@ -272,60 +228,19 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate }) 
           </div>
         </div>
 
-        {/* Total Earnings & RazorpayX Disbursal */}
-        <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800 flex flex-col justify-between space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Total Earnings / Wallet
-              </span>
-              <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                ₹{totalEarningsInr > 0 ? totalEarningsInr.toLocaleString('en-IN') : '14,800'}
-              </div>
-              <p className="text-[11px] text-slate-500 mt-0.5">Disbursable via RazorpayX Instant Payout</p>
+        {/* Total Earnings */}
+        <div className="rounded-3xl bg-white p-5 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800 flex items-center justify-between">
+          <div>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Total Earnings
+            </span>
+            <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+              ₹{totalEarningsInr > 0 ? totalEarningsInr.toLocaleString('en-IN') : '14,800'}
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
-              <Wallet className="h-6 w-6" />
-            </div>
+            <p className="text-[11px] text-slate-500 mt-0.5">Disbursed via RazorpayX UPI</p>
           </div>
-
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-            {payoutSuccess ? (
-              <div className="rounded-xl bg-emerald-50 p-2.5 text-xs text-emerald-800 font-bold border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300">
-                ✓ Payout Disbursed! UTR: <span className="font-mono">{payoutUtr}</span>
-              </div>
-            ) : showPayoutDrawer ? (
-              <div className="space-y-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between text-xs font-bold">
-                  <span>Enter UPI ID / Bank VPA</span>
-                  <button onClick={() => setShowPayoutDrawer(false)} className="text-slate-400 hover:text-slate-600">✕</button>
-                </div>
-                <input
-                  type="text"
-                  value={payoutUpi}
-                  onChange={(e) => setPayoutUpi(e.target.value)}
-                  placeholder="e.g. 9822011201@okhdfcbank"
-                  className="w-full rounded-lg border border-slate-300 p-2 text-xs font-mono dark:bg-slate-900 dark:border-slate-700"
-                />
-                <button
-                  type="button"
-                  disabled={disbursing}
-                  onClick={handleDisbursePayout}
-                  className="w-full rounded-xl bg-emerald-600 py-2 text-xs font-black text-white hover:bg-emerald-500 transition disabled:opacity-50"
-                >
-                  {disbursing ? 'Processing RazorpayX Transfer...' : 'Confirm Instant Transfer'}
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowPayoutDrawer(true)}
-                className="w-full rounded-xl bg-slate-900 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center justify-center gap-1.5"
-              >
-                <Zap className="h-3.5 w-3.5 text-amber-400" />
-                <span>Instant Payout to Bank/UPI</span>
-              </button>
-            )}
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
+            <Wallet className="h-6 w-6" />
           </div>
         </div>
 

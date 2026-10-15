@@ -76,25 +76,6 @@ export const HireFlowPage: React.FC<HireFlowPageProps> = ({
 
     jobsRepo.save(newJob);
 
-    // Call server API to register job in SQLite database
-    try {
-      fetch('/api/v1/jobs/hire', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          employerId: newJob.employerId,
-          workerIds: newJob.workerIds,
-          skillRequired: newJob.skillRequired,
-          description: newJob.description,
-          startDate: newJob.startDate,
-          endDate: newJob.endDate,
-          durationDays: newJob.durationDays,
-          dailyWageInr: newJob.dailyWageInr,
-          employerPlan: currentEmployer?.plan || 'free'
-        })
-      }).catch(() => {});
-    } catch {}
-
     // Open Razorpay Checkout modal
     openModal('razorpay', {
       jobId,

@@ -49,7 +49,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               </h1>
 
               <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto lg:mx-0 font-medium leading-relaxed">
-                Electricians, plumbers, masons, painters, and carpenters register by simply speaking in their mother tongue. Employers search, hear authentic voice profiles, hire, and disburse wages through RBI-compliant escrow.
+                Electricians, plumbers, masons, painters, and carpenters register by simply speaking in their mother tongue. Employers search, hear authentic voice profiles, hire, and disburse wages through escrow-style held payments (sandbox).
               </p>
 
               {/* Big Dual CTAs */}
@@ -217,7 +217,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <span className="text-xs font-black text-amber-600 tracking-wider uppercase">Step 03</span>
             <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white">3. Get Hired (काम और भुगतान)</h3>
             <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-              Contractors and households hear your voice profile and hire you. Wages are held securely in RBI escrow and disbursed directly to UPI/bank.
+              Contractors and households hear your voice profile and hire you. Wages are held securely in platform escrow-style protection (sandbox) and disbursed directly to UPI/bank.
             </p>
           </div>
         </div>
@@ -345,15 +345,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               <ul className="space-y-2 text-slate-300">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>DPDP Act 2023 Compliant:</strong> Never stores plain 12-digit Aadhaar numbers. SHA-256 one-way hashing only.</span>
+                  <span><strong>DPDP Act 2023 Compliant:</strong> Never stores plain 12-digit Aadhaar numbers. Zero biometric storage.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>RBI Escrow Protection:</strong> Wages held in nodal escrow before work starts to protect workers from wage theft.</span>
+                  <span><strong>Escrow Protection (Sandbox):</strong> Wages held in escrow-style ledger before work starts. (Live escrow requires RBI-authorized partner).</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>DigiLocker Integration:</strong> Direct credential verification against Ministry of Skill Development & NCVT.</span>
+                  <span><strong>DigiLocker Verification (Simulated):</strong> Verifiable trade credential checking against NCVT ITI standards.</span>
                 </li>
               </ul>
             </div>

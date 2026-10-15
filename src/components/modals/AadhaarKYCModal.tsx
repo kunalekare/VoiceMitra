@@ -132,7 +132,7 @@ export const AadhaarKYCModal: React.FC = () => {
             <div className="rounded-2xl bg-amber-50/70 p-3 text-[11px] leading-relaxed text-amber-900 dark:bg-slate-800 dark:text-amber-300 border border-amber-200/60 dark:border-slate-700 flex items-start gap-2">
               <Lock className="h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400 mt-0.5" />
               <span>
-                <strong>DPDP Act 2023 Security Notice:</strong> SkillBridge never saves your 12-digit number. We only verify via UIDAI OTP and store a one-way encrypted SHA-256 hash.
+                <strong>DPDP Act 2023 & Sandbox Notice:</strong> SkillBridge never saves your 12-digit number. We verify in sandbox mode using an encrypted peppered reference token.
               </span>
             </div>
 
@@ -141,7 +141,7 @@ export const AadhaarKYCModal: React.FC = () => {
               disabled={loading}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-black text-white shadow-lg hover:bg-emerald-500 transition disabled:opacity-50"
             >
-              <span>{loading ? 'Connecting UIDAI...' : 'Send Aadhaar OTP (123456)'}</span>
+              <span>{loading ? 'Sending Sandbox OTP...' : 'Send Aadhaar OTP (123456)'}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>

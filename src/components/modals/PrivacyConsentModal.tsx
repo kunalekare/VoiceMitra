@@ -100,8 +100,8 @@ export const PrivacyConsentModal: React.FC = () => {
                   className="mt-0.5 rounded text-orange-600 focus:ring-orange-500"
                 />
                 <div>
-                  <div className="font-bold text-slate-800 dark:text-slate-200">RBI-Compliant Wage Escrow & RazorpayX Disbursal</div>
-                  <div className="text-[11px] text-slate-500">Secures your daily wages in bank escrow before work commences.</div>
+                  <div className="font-bold text-slate-800 dark:text-slate-200">Escrow-Style Held Wage Escrow & Disbursal (Sandbox)</div>
+                  <div className="text-[11px] text-slate-500">Holds your daily wages safely in platform escrow before work commences.</div>
                 </div>
               </label>
             </div>

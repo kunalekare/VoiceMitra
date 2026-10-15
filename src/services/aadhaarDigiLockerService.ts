@@ -94,8 +94,8 @@ export const aadhaarDigiLockerService = {
       verified: true,
       aadhaarHash: hash,
       maskedAadhaar,
-      verifiedName: 'UIDAI Government Verified Worker',
-      message: 'Aadhaar e-KYC completed successfully under DPDP Act 2023 regulations.'
+      verifiedName: 'Government Skill Certified Worker (Sandbox Verified)',
+      message: 'Aadhaar e-KYC completed successfully in sandbox mode under DPDP Act 2023 regulations.'
     };
   },
 

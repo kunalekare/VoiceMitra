@@ -26,12 +26,20 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { DeveloperPortal } from './pages/DeveloperPortal';
 import { UnitTestsPage } from './pages/UnitTestsPage';
+import { LegalCompliancePage } from './pages/LegalCompliancePage';
 
 export default function App() {
   const { activeModal, openModal, theme, userRole, isAuthenticated } = useAppStore();
   const [currentTab, setCurrentTab] = useState<string>('home');
+  const [legalSubTab, setLegalSubTab] = useState<'terms' | 'privacy' | 'grievance' | 'sandbox-disclaimer'>('privacy');
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>('w-ngp-01');
   const [hireTargetWorker, setHireTargetWorker] = useState<Worker | undefined>(undefined);
+
+  const openLegalPage = (subTab: 'terms' | 'privacy' | 'grievance' | 'sandbox-disclaimer') => {
+    setLegalSubTab(subTab);
+    setCurrentTab('legal');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleNavigate = (tab: string, data?: unknown) => {
     setCurrentTab(tab);
@@ -112,6 +120,13 @@ export default function App() {
           {currentTab === 'developer' && <DeveloperPortal />}
 
           {currentTab === 'unit-tests' && <UnitTestsPage />}
+
+          {currentTab === 'legal' && (
+            <LegalCompliancePage
+              initialTab={legalSubTab}
+              onBack={() => setCurrentTab('home')}
+            />
+          )}
         </main>
 
         {/* Global Modals */}
@@ -138,27 +153,48 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Quick Simulator Launchers & Privacy link */}
-              <div className="flex flex-wrap items-center gap-4 font-semibold text-slate-600 dark:text-slate-300">
+              {/* Quick Simulator Launchers, Legal & Privacy links */}
+              <div className="flex flex-wrap items-center gap-3 font-semibold text-slate-600 dark:text-slate-300 text-[11px]">
                 <button
-                  onClick={() => openModal('privacy')}
+                  onClick={() => openLegalPage('privacy')}
                   className="hover:text-orange-600 transition"
                 >
-                  DPDP Act 2023 Privacy & Consent
+                  DPDP Act Privacy Policy
+                </button>
+                <span>•</span>
+                <button
+                  onClick={() => openLegalPage('terms')}
+                  className="hover:text-orange-600 transition"
+                >
+                  Terms of Service
+                </button>
+                <span>•</span>
+                <button
+                  onClick={() => openLegalPage('grievance')}
+                  className="hover:text-orange-600 transition"
+                >
+                  Grievance Officer
+                </button>
+                <span>•</span>
+                <button
+                  onClick={() => openLegalPage('sandbox-disclaimer')}
+                  className="hover:text-amber-600 transition"
+                >
+                  Sandbox Disclosures
                 </button>
                 <span>•</span>
                 <button
                   onClick={() => openModal('whatsapp')}
                   className="hover:text-emerald-600 transition"
                 >
-                  WhatsApp Bot Simulator
+                  WhatsApp Bot
                 </button>
                 <span>•</span>
                 <button
                   onClick={() => openModal('ivr')}
                   className="hover:text-orange-600 transition"
                 >
-                  Phone IVR (080-47190000)
+                  IVR Phone
                 </button>
                 <span>•</span>
                 <button
@@ -171,7 +207,7 @@ export default function App() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400">
-              <p>© 2026 SkillBridge Technologies. Built with Google Gemini API & RBI Escrow Safeguards.</p>
+              <p>© 2026 SkillBridge Technologies. Powered by Google Gemini API • Escrow-Style Held Payments (Sandbox Mode - requires RBI-authorized banking partner in production).</p>
               <p>Supports 12 Indian Languages • WCAG AA Accessible • Low-Literacy Voice First</p>
             </div>
           </div>
