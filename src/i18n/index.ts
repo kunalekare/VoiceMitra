@@ -369,9 +369,13 @@ export function useTranslation() {
     t: translate,
     currentLang,
     getLocalizedTrade: localizedTrade,
+    localizedTrade,
     formatCurrency: localizedCurrency,
+    localizedCurrency,
     formatNumber: localizedNumber,
+    localizedNumber,
     formatDate: localizedDate,
+    localizedDate,
     isRTL: currentLang === 'ur'
   };
 }

@@ -19,7 +19,14 @@ const envSchema = z.object({
   SMTP_PORT: z.coerce.number().optional().default(587),
   SMTP_USER: z.string().optional().default(''),
   SMTP_PASS: z.string().optional().default(''),
-  SENTRY_DSN: z.string().optional().default('')
+  SENTRY_DSN: z.string().optional().default(''),
+  TELEPHONY_PROVIDER: z.enum(['simulator', 'exotel', 'twilio']).default('simulator'),
+  IVR_INBOUND_NUMBER: z.string().default('+918047190000'),
+  IVR_TOLL_FREE_NUMBER: z.string().default('1800-889-2026'),
+  TELEPHONY_ACCOUNT_SID: z.string().optional().default(''),
+  TELEPHONY_AUTH_TOKEN: z.string().optional().default(''),
+  TELEPHONY_WEBHOOK_SECRET: z.string().optional().default('skillbridge_ivr_webhook_secret_2026'),
+  PUBLIC_BASE_URL: z.string().default('http://localhost:3000')
 });
 
 export const ENV = envSchema.parse(process.env);

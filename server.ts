@@ -25,6 +25,7 @@ import { adminRouter } from './server/routes/adminRoutes';
 import { webhookRouter } from './server/routes/webhookRoutes';
 import { eventRouter } from './server/routes/eventRoutes';
 import { developerRouter } from './server/routes/developerRoutes';
+import { ivrRouter } from './server/routes/ivrRoutes';
 
 // Direct Gemini Services for backward compatibility
 import { processVoiceRegistration, processVoiceJobMatch, generateWorkerSummary } from './server/services/geminiService';
@@ -37,6 +38,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
+
+// Trust reverse proxy (Google Cloud Run / AI Studio preview environment)
+app.set('trust proxy', true);
 
 // Security Headers with Helmet
 app.use(
@@ -87,6 +91,7 @@ apiV1.use('/admin', adminRouter);
 apiV1.use('/webhooks', webhookRouter);
 apiV1.use('/events', eventRouter);
 apiV1.use('/developer', developerRouter);
+apiV1.use('/ivr', ivrRouter);
 
 app.use('/api/v1', apiV1);
 

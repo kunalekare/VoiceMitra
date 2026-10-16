@@ -40,9 +40,10 @@ import {
   notificationsRepo
 } from '../services/db';
 import { Worker, FraudQueueItem, Dispute, AuditLog } from '../types';
+import { IVRAdminConsole } from '../components/admin/IVRAdminConsole';
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'workers' | 'fraud' | 'disputes' | 'broadcast' | 'audit'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'workers' | 'fraud' | 'disputes' | 'broadcast' | 'audit' | 'ivr'>('overview');
 
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [fraudItems, setFraudItems] = useState<FraudQueueItem[]>([]);
@@ -202,6 +203,7 @@ export const AdminDashboard: React.FC = () => {
         <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
           {[
             { id: 'overview', label: 'KPIs & GMV' },
+            { id: 'ivr', label: '📞 IVR Telephony (1800)' },
             { id: 'workers', label: `Workers (${totalWorkers})` },
             { id: 'fraud', label: `Fraud Queue (${fraudItems.filter((f) => f.status === 'pending').length})` },
             { id: 'disputes', label: `Disputes (${disputes.length})` },
@@ -686,6 +688,9 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* TAB 7: IVR PRODUCTION TELEPHONY GATEWAY */}
+      {activeTab === 'ivr' && <IVRAdminConsole />}
     </div>
   );
 };

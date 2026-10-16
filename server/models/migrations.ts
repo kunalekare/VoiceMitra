@@ -1,5 +1,6 @@
 import { db, getDatabase } from '../config/database';
 import { SEED_WORKERS, SEED_EMPLOYERS, SEED_JOBS, SEED_REVIEWS, SEED_DISPUTES, SEED_AUDIT_LOGS, SEED_NOTIFICATIONS, SEED_FRAUD_QUEUE } from '../../src/data/seedData';
+import { SEED_IVR_NODES, SEED_IVR_TRANSITIONS, SEED_IVR_PROMPTS } from '../data/ivrMenuSeed';
 import bcrypt from 'bcryptjs';
 
 export async function runMigrations(): Promise<void> {
@@ -342,6 +343,146 @@ export async function runMigrations(): Promise<void> {
       );
     `);
 
+    // 21. IVR Nodes
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ivr_nodes (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        is_terminal INTEGER NOT NULL DEFAULT 0,
+        timeout_seconds INTEGER NOT NULL DEFAULT 5,
+        max_attempts INTEGER NOT NULL DEFAULT 2,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+
+    // 22. IVR Prompts per language
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ivr_prompts (
+        id TEXT PRIMARY KEY,
+        node_id TEXT NOT NULL,
+        language TEXT NOT NULL,
+        prompt_text TEXT NOT NULL,
+        audio_url TEXT,
+        duration_seconds REAL,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (node_id) REFERENCES ivr_nodes(id)
+      );
+    `);
+
+    // 23. IVR Transitions (DTMF routing graph)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ivr_transitions (
+        id TEXT PRIMARY KEY,
+        from_node_id TEXT NOT NULL,
+        dtmf_key TEXT NOT NULL,
+        to_node_id TEXT NOT NULL,
+        action TEXT,
+        label TEXT,
+        priority INTEGER DEFAULT 0,
+        FOREIGN KEY (from_node_id) REFERENCES ivr_nodes(id)
+      );
+    `);
+
+    // 24. IVR Sessions (database-authoritative call sessions)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ivr_sessions (
+        call_id TEXT PRIMARY KEY,
+        caller_number TEXT NOT NULL,
+        caller_type TEXT DEFAULT 'unknown',
+        caller_id TEXT,
+        language TEXT NOT NULL DEFAULT 'hi',
+        current_node TEXT NOT NULL,
+        previous_node TEXT,
+        direction TEXT NOT NULL DEFAULT 'inbound',
+        status TEXT NOT NULL DEFAULT 'active',
+        attempts INTEGER NOT NULL DEFAULT 0,
+        pin_attempts INTEGER NOT NULL DEFAULT 0,
+        authenticated INTEGER NOT NULL DEFAULT 0,
+        voice_pin TEXT DEFAULT '1234',
+        collected_data TEXT NOT NULL DEFAULT '{}',
+        recording_url TEXT,
+        recording_transcript TEXT,
+        started_at TEXT NOT NULL DEFAULT (datetime('now')),
+        ended_at TEXT,
+        duration_seconds INTEGER DEFAULT 0,
+        outcome TEXT,
+        disposition TEXT,
+        provider TEXT NOT NULL DEFAULT 'simulator'
+      );
+    `);
+
+    // 25. IVR Callbacks (Missed call & scheduled retries)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ivr_callbacks (
+        id TEXT PRIMARY KEY,
+        phone TEXT NOT NULL,
+        language TEXT DEFAULT 'hi',
+        scheduled_at TEXT NOT NULL,
+        attempts INTEGER NOT NULL DEFAULT 0,
+        max_attempts INTEGER NOT NULL DEFAULT 3,
+        status TEXT NOT NULL DEFAULT 'pending',
+        last_attempt_at TEXT,
+        call_id TEXT,
+        consent_recorded INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+
+    // 26. IVR Consents (DPDP & Telecom regulatory compliance)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ivr_consents (
+        id TEXT PRIMARY KEY,
+        phone TEXT NOT NULL,
+        consent_type TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'granted',
+        source TEXT NOT NULL DEFAULT 'ivr',
+        timestamp TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+
+    // 27. Do-Not-Call (DNC) list
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ivr_dnc_list (
+        phone TEXT PRIMARY KEY,
+        reason TEXT,
+        added_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+
+    // 28. Blocked Numbers (Fraud & Robocall prevention)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ivr_blocked_numbers (
+        phone TEXT PRIMARY KEY,
+        reason TEXT,
+        flagged_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+
+    // 29. IVR Support Tickets & Voicemails
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ivr_support_tickets (
+        id TEXT PRIMARY KEY,
+        call_id TEXT NOT NULL,
+        caller_number TEXT NOT NULL,
+        language TEXT NOT NULL DEFAULT 'hi',
+        voicemail_url TEXT,
+        transcript TEXT,
+        status TEXT NOT NULL DEFAULT 'open',
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+
+    // 30. IVR Compliance Settings
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ivr_compliance_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        description TEXT,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+
     // Create helpful performance indexes
     db.run(`CREATE INDEX IF NOT EXISTS idx_workers_skill ON workers(primary_skill);`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_workers_district ON workers(district);`);
@@ -349,10 +490,15 @@ export async function runMigrations(): Promise<void> {
     db.run(`CREATE INDEX IF NOT EXISTS idx_jobs_employer ON jobs(employer_id);`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at);`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_ivr_prompts_node ON ivr_prompts(node_id, language);`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_ivr_transitions_from ON ivr_transitions(from_node_id, dtmf_key);`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_ivr_sessions_caller ON ivr_sessions(caller_number);`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_ivr_callbacks_status ON ivr_callbacks(status);`);
   });
 
-  // Seed initial data if workers table is empty
+  // Seed initial worker and IVR data
   await seedInitialData();
+  await seedIvrMenu();
 }
 
 export async function seedInitialData(force = false): Promise<void> {
@@ -632,3 +778,105 @@ export async function seedInitialData(force = false): Promise<void> {
 
   console.log('✅ SQLite Database successfully initialized and seeded with 40+ workers & relations.');
 }
+
+export async function seedIvrMenu(force = false): Promise<void> {
+  const existingCount = db.queryOne<{ count: number }>('SELECT COUNT(*) as count FROM ivr_nodes;');
+  if (!force && existingCount && existingCount.count > 0) {
+    return;
+  }
+
+  db.transaction(() => {
+    if (force) {
+      db.run('DELETE FROM ivr_transitions;');
+      db.run('DELETE FROM ivr_prompts;');
+      db.run('DELETE FROM ivr_nodes;');
+    }
+
+    // 1. Insert IVR Nodes
+    for (const node of SEED_IVR_NODES) {
+      db.run(`
+        INSERT OR REPLACE INTO ivr_nodes (id, name, category, is_terminal, timeout_seconds, max_attempts)
+        VALUES (?, ?, ?, ?, ?, ?);
+      `, [
+        node.id,
+        node.name,
+        node.category,
+        node.isTerminal ? 1 : 0,
+        node.timeoutSeconds || 5,
+        node.maxAttempts || 2
+      ]);
+    }
+
+    // 2. Insert IVR Transitions
+    for (const tr of SEED_IVR_TRANSITIONS) {
+      const trId = `tr_${tr.fromNodeId}_${tr.dtmfKey}`;
+      db.run(`
+        INSERT OR REPLACE INTO ivr_transitions (id, from_node_id, dtmf_key, to_node_id, action, label, priority)
+        VALUES (?, ?, ?, ?, ?, ?, ?);
+      `, [
+        trId,
+        tr.fromNodeId,
+        tr.dtmfKey,
+        tr.toNodeId,
+        tr.action || null,
+        tr.label,
+        tr.priority || 0
+      ]);
+    }
+
+    // 3. Insert IVR Prompts
+    for (const pr of SEED_IVR_PROMPTS) {
+      const prId = `pr_${pr.nodeId}_${pr.language}`;
+      db.run(`
+        INSERT OR REPLACE INTO ivr_prompts (id, node_id, language, prompt_text, audio_url, duration_seconds)
+        VALUES (?, ?, ?, ?, ?, ?);
+      `, [
+        prId,
+        pr.nodeId,
+        pr.language,
+        pr.promptText,
+        `/api/v1/ivr/prompts/${pr.nodeId}/audio?lang=${pr.language}`,
+        pr.promptText.length * 0.08
+      ]);
+    }
+
+    // 4. Default Compliance Settings
+    const defaultSettings = [
+      { key: 'calling_hours_start', value: '09:00', desc: 'Outbound calling start time (IST)' },
+      { key: 'calling_hours_end', value: '21:00', desc: 'Outbound calling end time (IST)' },
+      { key: 'calling_hours_timezone', value: 'Asia/Kolkata', desc: 'Calling hours regulatory timezone' },
+      { key: 'dlt_entity_id', value: '110155223344', desc: 'TRAI Principal Entity DLT ID' },
+      { key: 'dlt_sender_id', value: 'SKLBRG', desc: 'TRAI Registered 6-character Header' },
+      { key: 'max_daily_callbacks_per_number', value: '5', desc: 'Daily per-number outbound call cap' },
+      { key: 'recording_retention_days', value: '90', desc: 'DPDP Data minimization recording retention in days' },
+      { key: 'support_agent_number', value: '+918047190001', desc: 'Live agent transfer phone number' },
+      { key: 'allow_recording_consent_bypass', value: '0', desc: 'Mandatory consent notice enforcement' }
+    ];
+
+    for (const s of defaultSettings) {
+      db.run(`
+        INSERT OR REPLACE INTO ivr_compliance_settings (key, value, description, updated_at)
+        VALUES (?, ?, ?, datetime('now'));
+      `, [s.key, s.value, s.desc]);
+    }
+
+    // 5. Seed sample consents and DNC
+    db.run(`
+      INSERT OR REPLACE INTO ivr_consents (id, phone, consent_type, status, source, timestamp)
+      VALUES ('c-1', '+919822012345', 'recording_and_callback', 'granted', 'ivr', datetime('now'));
+    `);
+
+    db.run(`
+      INSERT OR REPLACE INTO ivr_dnc_list (phone, reason, added_at)
+      VALUES ('+919999900000', 'Worker requested Do Not Call registry', datetime('now'));
+    `);
+
+    db.run(`
+      INSERT OR REPLACE INTO ivr_blocked_numbers (phone, reason, flagged_at)
+      VALUES ('+919999911111', 'Robocall spam detection threshold exceeded', datetime('now'));
+    `);
+  });
+
+  console.log('✅ IVR Telephony menu tree, 12-language prompts, transitions & compliance rules seeded.');
+}
+

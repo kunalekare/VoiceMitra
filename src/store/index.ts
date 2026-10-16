@@ -27,7 +27,7 @@ interface AppState {
   viewMode: 'grid' | 'map';
 
   // Modals & Simulators
-  activeModal: 'aadhaar' | 'quiz' | 'whatsapp' | 'ivr' | 'privacy' | 'razorpay' | 'language' | null;
+  activeModal: 'aadhaar' | 'quiz' | 'whatsapp' | 'ivr' | 'privacy' | 'razorpay' | 'language' | 'languageChooser' | null;
   modalData: unknown;
 
   // Actions

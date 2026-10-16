@@ -71,25 +71,22 @@ export const RazorpayCheckoutModal: React.FC = () => {
 
       // 4. Record audit log
       auditLogsRepo.log({
-        id: `aud-${Date.now()}`,
-        userId: 'emp-current',
-        userRole: 'employer',
+        actorId: 'emp-current',
+        actorRole: 'employer',
         action: 'ESCROW_DEPOSIT_LOCKED',
-        resourceType: 'job',
-        resourceId: data.jobId,
-        payloadHash: signature,
-        status: 'success'
+        entityType: 'job',
+        entityId: data.jobId,
+        details: `Escrow payment locked with signature ${signature}`
       });
 
       // 5. Notify assigned workers
       data.workerIds.forEach((wId) => {
-        notificationsRepo.addNotification({
-          id: `notif-${Date.now()}-${wId}`,
+        notificationsRepo.send({
           userId: wId,
-          type: 'wage_escrow_locked',
+          role: 'worker',
+          channel: 'in-app',
           title: t('payment.escrowBadge'),
-          message: `${formatCurrency(data.totalWageInr, currentLang)} • ${t('payment.escrowLocked')}`,
-          read: false
+          message: `${formatCurrency(data.totalWageInr, currentLang)} • ${t('payment.escrowLocked')}`
         });
       });
 

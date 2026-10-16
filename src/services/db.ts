@@ -222,17 +222,20 @@ export const notificationsRepo = {
   getByUser: (userId: string): Notification[] => {
     return notificationsRepo.getAll().filter((n) => n.userId === userId);
   },
-  send: (notif: Omit<Notification, 'id' | 'createdAt' | 'read'>): Notification => {
+  send: (notif: Omit<Notification, 'id' | 'createdAt' | 'read'> & Partial<Pick<Notification, 'id' | 'createdAt' | 'read'>>): Notification => {
     const all = notificationsRepo.getAll();
     const newNotif: Notification = {
       ...notif,
-      id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-      createdAt: new Date().toISOString(),
-      read: false
+      id: notif.id || `notif-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      createdAt: notif.createdAt || new Date().toISOString(),
+      read: notif.read ?? false
     };
     all.unshift(newNotif);
     setItem(KEYS.NOTIFICATIONS, all);
     return newNotif;
+  },
+  addNotification: (notif: Omit<Notification, 'id' | 'createdAt' | 'read'> & Partial<Pick<Notification, 'id' | 'createdAt' | 'read'>>): Notification => {
+    return notificationsRepo.send(notif);
   },
   markAsRead: (id: string): void => {
     const all = notificationsRepo.getAll();
@@ -247,12 +250,12 @@ export const notificationsRepo = {
 // AUDIT LOGS REPOSITORY
 export const auditLogsRepo = {
   getAll: (): AuditLog[] => getItem<AuditLog[]>(KEYS.AUDIT_LOGS, SEED_AUDIT_LOGS),
-  log: (entry: Omit<AuditLog, 'id' | 'timestamp'>): AuditLog => {
+  log: (entry: Omit<AuditLog, 'id' | 'timestamp'> & { id?: string; timestamp?: string }): AuditLog => {
     const all = auditLogsRepo.getAll();
     const newEntry: AuditLog = {
       ...entry,
-      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-      timestamp: new Date().toISOString()
+      id: entry.id || `log-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      timestamp: entry.timestamp || new Date().toISOString()
     };
     all.unshift(newEntry);
     setItem(KEYS.AUDIT_LOGS, all);

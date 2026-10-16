@@ -271,7 +271,7 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({
                 </div>
 
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  "{rev.comment}"
+                  "{rev.textReview || (rev as any).comment}"
                 </p>
 
                 <div className="text-[10px] text-slate-400">
