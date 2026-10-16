@@ -80,6 +80,24 @@ const getInitialLanguage = (): LanguageCode => {
   return 'hi';
 };
 
+const getInitialTheme = (): 'light' | 'dark' => {
+  if (typeof window === 'undefined') return 'light';
+  try {
+    const saved = localStorage.getItem('skillbridge_theme');
+    if (saved === 'dark' || saved === 'light') {
+      if (saved === 'dark') document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+      return saved;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+      return 'dark';
+    }
+  } catch {}
+  document.documentElement.classList.remove('dark');
+  return 'light';
+};
+
 export const useAppStore = create<AppState>((set, get) => ({
   // Defaults
   isAuthenticated: false,
@@ -90,7 +108,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   currentLang: getInitialLanguage(),
   speechEnabled: true,
-  theme: 'light',
+  theme: getInitialTheme(),
 
   searchQuery: '',
   selectedCity: 'Nagpur',
@@ -238,7 +256,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch {}
   },
   setSpeechEnabled: (enabled: boolean) => set({ speechEnabled: enabled }),
-  toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
+  toggleTheme: () => set((state) => {
+    const nextTheme = state.theme === 'light' ? 'dark' : 'light';
+    try {
+      localStorage.setItem('skillbridge_theme', nextTheme);
+      if (nextTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } catch {}
+    return { theme: nextTheme };
+  }),
 
   setSearchQuery: (query: string) => set({ searchQuery: query }),
   setSelectedCity: (city: string) => set({ selectedCity: city }),

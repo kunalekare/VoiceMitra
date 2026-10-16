@@ -512,7 +512,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate }) => {
               {t('nav.tests')}
             </button>
 
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
               <button
                 onClick={() => {
                   openModal('whatsapp');
@@ -532,6 +532,14 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate }) => {
               >
                 <PhoneCall className="h-4 w-4" />
                 <span>{t('nav.phoneIvr')}</span>
+              </button>
+              <button
+                onClick={toggleTheme}
+                className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                title={t('nav.themeToggle')}
+                aria-label={t('nav.themeToggle')}
+              >
+                {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
               </button>
             </div>
           </div>

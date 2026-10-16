@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     --font-indic-devanagari: 'Noto Sans Devanagari', system-ui, sans-serif;

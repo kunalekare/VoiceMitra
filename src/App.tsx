@@ -47,6 +47,14 @@ export default function App() {
     applyDocumentLanguage(currentLang);
   }, [currentLang]);
 
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   const openLegalPage = (subTab: 'terms' | 'privacy' | 'grievance' | 'sandbox-disclaimer') => {
     setLegalSubTab(subTab);
     setCurrentTab('legal');

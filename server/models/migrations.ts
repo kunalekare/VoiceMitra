@@ -483,6 +483,18 @@ export async function runMigrations(): Promise<void> {
       );
     `);
 
+    // 31. WhatsApp Sessions (two-way conversational bot with DB persistence)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS whatsapp_sessions (
+        phone TEXT PRIMARY KEY,
+        state TEXT NOT NULL DEFAULT 'NEW',
+        language TEXT NOT NULL DEFAULT 'hi',
+        worker_id TEXT,
+        session_data TEXT NOT NULL DEFAULT '{}',
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+
     // Create helpful performance indexes
     db.run(`CREATE INDEX IF NOT EXISTS idx_workers_skill ON workers(primary_skill);`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_workers_district ON workers(district);`);
