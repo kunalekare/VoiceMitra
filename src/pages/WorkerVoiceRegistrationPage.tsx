@@ -65,7 +65,7 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
     setStep('confirm');
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     const canonicalNormalized = normalizeSkill(primarySkill).canonical;
 
     const newWorkerId = currentWorker?.id || `w-reg-${Date.now()}`;
@@ -76,7 +76,7 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
       primarySkill: canonicalNormalized,
       secondarySkills,
       experienceYears: Number(experienceYears) || 1,
-      languagesSpoken: ['Hindi', 'Marathi'],
+      languagesSpoken: ['Hindi', 'Marathi', 'English'],
       district: locationCity,
       state: 'Maharashtra',
       pincode: '440001',
@@ -98,8 +98,34 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
       dailyWageExpected: Number(dailyWage) || 850
     };
 
+    // 1. Save in reactive client repository
     workersRepo.save(newWorker);
     loginAsWorker(newWorkerId);
+
+    // 2. Persist to SQLite backend database
+    try {
+      await fetch('/api/v1/workers/voice-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: newWorkerId,
+          phone,
+          languageCode: currentLang,
+          overrideData: {
+            id: newWorkerId,
+            name: fullName,
+            primarySkill: canonicalNormalized,
+            secondarySkills,
+            experienceYears: Number(experienceYears) || 1,
+            district: locationCity,
+            dailyWageExpected: Number(dailyWage) || 850
+          }
+        })
+      });
+    } catch (syncErr) {
+      console.warn('Backend SQLite sync warning:', syncErr);
+    }
+
     setStep('complete');
   };
 

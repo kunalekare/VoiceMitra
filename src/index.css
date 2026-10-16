@@ -3,6 +3,18 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
   :root {
     --font-indic-devanagari: 'Noto Sans Devanagari', system-ui, sans-serif;
     --font-indic-tamil: 'Noto Sans Tamil', system-ui, sans-serif;

@@ -165,6 +165,7 @@ describe('IVR Telephony Unit & Integration Tests', () => {
     });
 
     it('step 5: triggers missed-call webhook and schedules callback', async () => {
+      db.run("DELETE FROM ivr_callbacks WHERE phone = '+919822088888';");
       const res = await request(app)
         .post('/api/v1/ivr/missed-call')
         .send({

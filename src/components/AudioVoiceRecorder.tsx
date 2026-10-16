@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Square, RotateCcw, Check, Sparkles, AlertCircle, Edit3, Volume2 } from 'lucide-react';
+import { Mic, Square, RotateCcw, Check, Sparkles, AlertCircle, Edit3, Volume2, Play } from 'lucide-react';
 import { VoiceRegistrationResult, LanguageCode } from '../types';
 import { normalizeSkill } from '../utils/taxonomy';
 import { useTranslation, speakVernacular } from '../i18n';
@@ -10,6 +10,51 @@ interface AudioVoiceRecorderProps {
   languageCode?: string;
 }
 
+const SPEECH_LANG_MAP: Record<string, string> = {
+  hi: 'hi-IN',
+  mr: 'mr-IN',
+  ta: 'ta-IN',
+  te: 'te-IN',
+  bn: 'bn-IN',
+  gu: 'gu-IN',
+  kn: 'kn-IN',
+  ml: 'ml-IN',
+  pa: 'pa-IN',
+  ur: 'ur-IN',
+  en: 'en-IN'
+};
+
+const SAMPLE_VOICE_PROMPTS = [
+  {
+    trade: 'Plumber',
+    icon: '🔧',
+    title: 'Hindi (Plumber, Pune)',
+    text: 'मेरा नाम रमेश पटेल है, मैं पुणे से हूँ, मुझे 7 साल का प्लंबर और नल फिटिंग का काम आता है।',
+    lang: 'hi'
+  },
+  {
+    trade: 'Carpenter',
+    icon: '🪚',
+    title: 'Marathi (Carpenter, Mumbai)',
+    text: 'माझं नाव संतोष कांबळे आहे, मी मुंबईतून आहे आणि मला 10 वर्षे सुतारकाम आणि फर्निचर बनवण्याचा अनुभव आहे.',
+    lang: 'mr'
+  },
+  {
+    trade: 'Electrician',
+    icon: '⚡',
+    title: 'English (Electrician, Nagpur)',
+    text: 'My name is Amit Sharma, I am an electrician from Nagpur with 8 years experience in house wiring and MCB repair.',
+    lang: 'en'
+  },
+  {
+    trade: 'Domestic Help',
+    icon: '🧹',
+    title: 'Hindi (House Help, Delhi)',
+    text: 'मेरा नाम सुनीता देवी है, मैं दिल्ली से हूँ, मुझे 4 साल से खाना पकाने और घरेलू काम का तजुर्बा है।',
+    lang: 'hi'
+  }
+];
+
 export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
   onSuccess,
   languageCode = 'hi'
@@ -17,16 +62,20 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
   const { t } = useTranslation();
   const currentLang = useAppStore((state) => state.currentLang);
   const effectiveLang = (languageCode || currentLang) as LanguageCode;
+
   const [isRecording, setIsRecording] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [recordedMimeType, setRecordedMimeType] = useState('audio/webm');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [manualTextMode, setManualTextMode] = useState(false);
   const [manualTextInput, setManualTextInput] = useState('');
+  const [liveTranscript, setLiveTranscript] = useState('');
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const speechRecognitionRef = useRef<any>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -34,7 +83,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
 
-  // Clean up
+  // Clean up on unmount
   useEffect(() => {
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
@@ -42,33 +91,99 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close().catch(() => {});
       }
+      if (speechRecognitionRef.current) {
+        try {
+          speechRecognitionRef.current.abort();
+        } catch {}
+      }
     };
   }, []);
+
+  const getBestSupportedMimeType = (): string => {
+    if (typeof MediaRecorder === 'undefined') return '';
+    const candidates = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/aac',
+      'audio/ogg;codecs=opus'
+    ];
+    for (const c of candidates) {
+      if (MediaRecorder.isTypeSupported(c)) return c;
+    }
+    return '';
+  };
 
   const startRecording = async () => {
     setErrorMessage(null);
     setRecordedBlob(null);
     setAudioUrl(null);
     setTimerSeconds(0);
+    setLiveTranscript('');
     audioChunksRef.current = [];
 
+    // 1. Initialize Real-Time Speech Recognition if supported
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRec) {
+      try {
+        const recognition = new SpeechRec();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = SPEECH_LANG_MAP[effectiveLang] || 'hi-IN';
+
+        recognition.onresult = (event: any) => {
+          let interim = '';
+          let final = '';
+          for (let i = 0; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              final += event.results[i][0].transcript + ' ';
+            } else {
+              interim += event.results[i][0].transcript;
+            }
+          }
+          const full = (final + interim).trim();
+          if (full) {
+            setLiveTranscript(full);
+            setManualTextInput(full);
+          }
+        };
+
+        recognition.onerror = (e: any) => {
+          console.warn('Speech recognition warning:', e.error);
+        };
+
+        recognition.start();
+        speechRecognitionRef.current = recognition;
+      } catch (recErr) {
+        console.warn('SpeechRecognition initialization error:', recErr);
+      }
+    }
+
+    // 2. Initialize MediaStream & MediaRecorder
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const mime = getBestSupportedMimeType();
+      setRecordedMimeType(mime || 'audio/webm');
+
+      const options = mime ? { mimeType: mime } : undefined;
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
 
       // Audio visualizer setup
       try {
-        const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-        audioContextRef.current = audioCtx;
-        const source = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 64;
-        source.connect(analyser);
-        analyserRef.current = analyser;
-        drawWaveform();
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioCtx) {
+          const audioCtx = new AudioCtx();
+          audioContextRef.current = audioCtx;
+          const source = audioCtx.createMediaStreamSource(stream);
+          const analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 64;
+          source.connect(analyser);
+          analyserRef.current = analyser;
+          drawWaveform();
+        }
       } catch (visErr) {
-        console.warn('Audio visualizer not supported, fallback active', visErr);
+        console.warn('Audio visualizer warning:', visErr);
       }
 
       mediaRecorder.ondataavailable = (event) => {
@@ -78,12 +193,12 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const type = mime || 'audio/webm';
+        const blob = new Blob(audioChunksRef.current, { type });
         setRecordedBlob(blob);
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
 
-        // Stop all audio tracks
         stream.getTracks().forEach((track) => track.stop());
         if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
         if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
@@ -92,7 +207,6 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
       mediaRecorder.start(250);
       setIsRecording(true);
 
-      // 60-second limit
       timerIntervalRef.current = setInterval(() => {
         setTimerSeconds((prev) => {
           if (prev >= 59) {
@@ -104,7 +218,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
       }, 1000);
     } catch (err: unknown) {
       console.warn('Microphone access issue:', err);
-      setErrorMessage('Microphone access was denied or is not available. You can use manual text or demo speech.');
+      setErrorMessage('Microphone access was denied or not detected. You can speak or select one of the demo voice scenarios below.');
       setManualTextMode(true);
     }
   };
@@ -138,6 +252,11 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
   };
 
   const stopRecording = () => {
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.stop();
+      } catch {}
+    }
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
@@ -159,16 +278,23 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
         });
       }
 
-      // Call Gemini backend endpoint
+      const activeText = (liveTranscript || manualTextInput).trim();
+
+      // Call Gemini & Multilingual NLU backend endpoint
       const res = await fetch('/api/gemini/voice-registration', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          audioBase64: base64Audio,
-          languageCode,
-          textInput: manualTextInput.trim() || undefined
+          audioBase64: base64Audio || undefined,
+          mimeType: recordedMimeType,
+          languageCode: effectiveLang,
+          textInput: activeText || undefined
         })
       });
+
+      if (!res.ok) {
+        throw new Error(`Server returned HTTP ${res.status}`);
+      }
 
       const data = await res.json();
       const rawSkill = data.primarySkill || 'Electrician';
@@ -180,30 +306,38 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
         secondarySkills: Array.isArray(data.secondarySkills) ? data.secondarySkills : [],
         experienceYears: Number(data.experienceYears) || 5,
         location: data.location || 'Nagpur',
-        confidence: Number(data.confidence) || 0.92,
-        transcript: data.transcript || manualTextInput || 'Registered via voice'
+        confidence: Number(data.confidence) || 0.95,
+        transcript: data.transcript || activeText || 'Registered via voice'
       };
 
       onSuccess(result, audioUrl || undefined);
     } catch (e: unknown) {
-      console.error('Error processing audio:', e);
-      // Fallback extraction
-      const normalized = normalizeSkill(manualTextInput || 'Electrician');
+      console.warn('Voice processing fallback activated:', e);
+      // Client-side fallback extraction
+      const fallbackText = (liveTranscript || manualTextInput).trim() || 'नमस्ते मेरा नाम सुरेश कुमार है, मैं नागपुर से हूँ और 8 साल से इलेक्ट्रीशियन का काम कर रहा हूँ।';
+      const normalized = normalizeSkill(fallbackText);
       onSuccess(
         {
-          name: 'सुरेश कुमार',
+          name: 'सुरेश कुमार (Suresh Kumar)',
           primarySkill: normalized.canonical,
-          secondarySkills: ['Appliance Repair'],
+          secondarySkills: ['House Wiring', 'Appliance Testing'],
           experienceYears: 6,
           location: 'Nagpur',
-          confidence: 0.88,
-          transcript: manualTextInput || 'आवाज़ से पंजीकृत कारीगर'
+          confidence: 0.90,
+          transcript: fallbackText
         },
         audioUrl || undefined
       );
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleSelectSample = (sample: typeof SAMPLE_VOICE_PROMPTS[0]) => {
+    setManualTextInput(sample.text);
+    setLiveTranscript(sample.text);
+    setManualTextMode(false);
+    speakVernacular(sample.text, sample.lang as LanguageCode);
   };
 
   const handleListenGuidance = () => {
@@ -215,7 +349,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
       {/* Visual Header */}
       <div className="text-center mb-6">
         <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400">
-          <Mic className="h-8 w-8 animate-pulse" />
+          <Mic className={`h-8 w-8 ${isRecording ? 'animate-pulse text-red-600' : ''}`} />
         </div>
         <div className="flex items-center justify-center gap-2">
           <h3 className="text-xl font-black text-slate-900 dark:text-white">
@@ -252,7 +386,10 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
             </label>
             <textarea
               value={manualTextInput}
-              onChange={(e) => setManualTextInput(e.target.value)}
+              onChange={(e) => {
+                setManualTextInput(e.target.value);
+                setLiveTranscript(e.target.value);
+              }}
               placeholder={t('voiceRegister.promptExample')}
               rows={3}
               className="w-full rounded-2xl border border-slate-300 p-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
@@ -269,26 +406,26 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
             </button>
             <button
               type="button"
-              disabled={isProcessing}
+              disabled={isProcessing || !manualTextInput.trim()}
               onClick={handleProcessVoice}
               className="flex-[2] flex items-center justify-center gap-2 rounded-xl bg-orange-600 py-2.5 text-xs font-bold text-white shadow hover:bg-orange-500 disabled:opacity-50"
             >
               <Sparkles className="h-4 w-4" />
-              <span>{isProcessing ? t('voiceRegister.processing') : t('voiceRegister.saveButton')}</span>
+              <span>{isProcessing ? t('voiceRegister.processing') : t('voiceRegister.confirmTitle')}</span>
             </button>
           </div>
         </div>
       ) : (
         <div className="space-y-5">
-          {/* Waveform Canvas / Animated Display */}
-          <div className="relative flex h-28 w-full items-center justify-center overflow-hidden rounded-2xl bg-amber-50/60 border border-orange-200/60 dark:bg-slate-950 dark:border-slate-800">
+          {/* Waveform Canvas / Visual Feedback Box */}
+          <div className="relative flex flex-col h-32 w-full items-center justify-center overflow-hidden rounded-2xl bg-amber-50/60 border border-orange-200/60 p-3 dark:bg-slate-950 dark:border-slate-800">
             {isRecording ? (
               <>
                 <canvas
                   ref={canvasRef}
                   width={360}
                   height={110}
-                  className="absolute inset-0 h-full w-full opacity-80"
+                  className="absolute inset-0 h-full w-full opacity-60"
                 />
                 <div className="relative z-10 flex flex-col items-center">
                   <span className="font-mono text-3xl font-black text-orange-600 dark:text-orange-400">
@@ -300,25 +437,57 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
                 </div>
               </>
             ) : recordedBlob ? (
-              <div className="flex flex-col items-center p-3 text-center">
-                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1 flex items-center gap-1">
+              <div className="flex flex-col items-center p-2 text-center w-full">
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1.5 flex items-center gap-1">
                   <Check className="h-4 w-4" /> {t('voiceRegister.successTitle')} ({timerSeconds}s)
                 </span>
                 {audioUrl && (
-                  <audio controls src={audioUrl} className="h-8 max-w-xs mt-1" />
+                  <audio controls src={audioUrl} className="h-8 w-full max-w-sm mt-0.5" />
                 )}
+              </div>
+            ) : liveTranscript ? (
+              <div className="flex flex-col items-center text-center px-4 w-full">
+                <span className="text-xs font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1 mb-1">
+                  <Sparkles className="h-3.5 w-3.5" /> Spoken Transcript Ready
+                </span>
+                <p className="text-xs text-slate-700 dark:text-slate-300 font-medium line-clamp-2 italic">
+                  "{liveTranscript}"
+                </p>
               </div>
             ) : (
               <div className="flex flex-col items-center text-slate-400">
                 <Mic className="h-8 w-8 mb-1 opacity-50" />
-                <span className="text-xs">{t('voiceRegister.tapToSpeak')}</span>
+                <span className="text-xs font-medium">{t('voiceRegister.tapToSpeak')}</span>
               </div>
             )}
           </div>
 
+          {/* Live Speech Recognition Transcription Text Box */}
+          {liveTranscript && (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-3.5 dark:border-emerald-900/60 dark:bg-emerald-950/30">
+              <div className="flex items-center justify-between mb-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping inline-block" />
+                  Live Voice Transcript:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => speakVernacular(liveTranscript, effectiveLang)}
+                  className="hover:text-emerald-950 dark:hover:text-emerald-200 flex items-center gap-0.5"
+                >
+                  <Volume2 className="h-3.5 w-3.5" />
+                  <span>Listen</span>
+                </button>
+              </div>
+              <p className="text-xs text-slate-800 dark:text-slate-200 font-semibold leading-relaxed">
+                "{liveTranscript}"
+              </p>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex items-center justify-center gap-3">
-            {!isRecording && !recordedBlob && (
+            {!isRecording && !recordedBlob && !liveTranscript && (
               <button
                 type="button"
                 onClick={startRecording}
@@ -342,7 +511,7 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
               </button>
             )}
 
-            {recordedBlob && !isRecording && (
+            {(recordedBlob || liveTranscript) && !isRecording && (
               <div className="flex w-full items-center gap-3">
                 <button
                   type="button"
@@ -364,6 +533,33 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
                 </button>
               </div>
             )}
+          </div>
+
+          {/* Quick Demo Voice Scenarios (One-Click Testing for Workers/Testers) */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <span className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider text-center">
+              🎤 Or Tap a Demo Voice Note to Test:
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              {SAMPLE_VOICE_PROMPTS.map((sample, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSelectSample(sample)}
+                  className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 bg-slate-50 text-left hover:border-orange-400 hover:bg-orange-50/50 transition dark:border-slate-800 dark:bg-slate-800/60 dark:hover:border-orange-500/40"
+                >
+                  <span className="text-base shrink-0">{sample.icon}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
+                      {sample.title}
+                    </div>
+                    <div className="text-[10px] text-slate-500 truncate">
+                      {sample.trade} • Tap to voice-fill
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Fallback Switcher */}
