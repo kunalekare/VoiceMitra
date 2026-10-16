@@ -1,10 +1,11 @@
 import { GoogleGenAI } from '@google/genai';
 import { ENV } from '../config/env';
 
+const apiKey = ENV.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 let ai: GoogleGenAI | null = null;
-if (ENV.GEMINI_API_KEY) {
+if (apiKey) {
   ai = new GoogleGenAI({
-    apiKey: ENV.GEMINI_API_KEY,
+    apiKey,
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build'
@@ -177,8 +178,8 @@ export async function processVoiceRegistration(
 ): Promise<VoiceRegistrationExtracted> {
   const cleanInputText = (textInput || '').trim();
 
-  // 1. Try Gemini Cloud API with retry if key exists
-  if (ai) {
+  // 1. Try Gemini Cloud API with retry if key exists (skip during vitest)
+  if (ai && !process.env.VITEST) {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
@@ -272,7 +273,7 @@ export async function processVoiceJobMatch(
   description: string;
   explanationSnippet: string;
 }> {
-  if (ai) {
+  if (ai && !process.env.VITEST) {
     try {
       const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
       if (audioBase64) {
@@ -372,7 +373,7 @@ export async function generateWorkerSummary(workerData: {
   badges: string[];
   city: string;
 }): Promise<{ summaryEnglish: string; summaryHindi: string }> {
-  if (ai) {
+  if (ai && !process.env.VITEST) {
     try {
       const prompt = `
 Generate a respectful, professional 2-sentence summary in English and Hindi for this Indian worker on SkillBridge:

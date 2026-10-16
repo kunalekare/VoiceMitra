@@ -82,18 +82,41 @@ SkillBridge/
 
 ---
 
-## 🔧 Environment Variables
+## 💻 Local Development Setup
 
-Defined in `.env.example`:
+To run SkillBridge locally on your machine:
 
-```bash
-# GEMINI_API_KEY: Required for Gemini AI calls (transcription, job matching, summaries).
-# Injected automatically in AI Studio from Secrets panel.
-GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/kunalekare/VoiceMitra.git
+   cd VoiceMitra
+   ```
 
-# PORT: Server listening port (defaults to 3000)
-PORT=3000
-```
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment Variables**:
+   Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+   Add your `GEMINI_API_KEY` (and optional telephony/payment credentials) to `.env`.
+
+4. **Start the Development Server**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser. Both Express API routes and the Vite frontend run simultaneously on port 3000.
+
+5. **Run Tests & Validation**:
+   ```bash
+   npm test               # Run all 49 Vitest unit & integration tests
+   npm run i18n:check     # Verify 100% key parity across all 12 Indian languages
+   npm run ivr:validate   # Validate the IVR telephony graph and state machine
+   npm run build          # Create production build in /dist
+   ```
 
 ---
 
