@@ -300,30 +300,34 @@ export const AudioVoiceRecorder: React.FC<AudioVoiceRecorderProps> = ({
       const rawSkill = data.primarySkill || 'Electrician';
       const normalized = normalizeSkill(rawSkill);
 
+      const parsedWage = Number(data.dailyWageExpected);
+      const wageLooksLikePhone = /^[6-9]\d{9}$/.test(String(Math.trunc(parsedWage)));
       const result: VoiceRegistrationResult = {
-        name: data.name || 'कारीगर',
+        name: typeof data.name === 'string' ? data.name : '',
         primarySkill: normalized.canonical,
         secondarySkills: Array.isArray(data.secondarySkills) ? data.secondarySkills : [],
         experienceYears: Number(data.experienceYears) || 5,
         location: data.location || 'Nagpur',
         confidence: Number(data.confidence) || 0.95,
-        transcript: data.transcript || activeText || 'Registered via voice'
+        transcript: data.transcript || activeText || 'Registered via voice',
+        phone: typeof data.phone === 'string' && data.phone.trim() ? data.phone.trim() : undefined,
+        dailyWageExpected: Number.isFinite(parsedWage) && !wageLooksLikePhone ? parsedWage : undefined
       };
 
       onSuccess(result, audioUrl || undefined);
     } catch (e: unknown) {
       console.warn('Voice processing fallback activated:', e);
       // Client-side fallback extraction
-      const fallbackText = (liveTranscript || manualTextInput).trim() || 'नमस्ते मेरा नाम सुरेश कुमार है, मैं नागपुर से हूँ और 8 साल से इलेक्ट्रीशियन का काम कर रहा हूँ।';
+      const fallbackText = (liveTranscript || manualTextInput).trim();
       const normalized = normalizeSkill(fallbackText);
       onSuccess(
         {
-          name: 'सुरेश कुमार (Suresh Kumar)',
+          name: '',
           primarySkill: normalized.canonical,
-          secondarySkills: ['House Wiring', 'Appliance Testing'],
-          experienceYears: 6,
+          secondarySkills: [],
+          experienceYears: 5,
           location: 'Nagpur',
-          confidence: 0.90,
+          confidence: 0,
           transcript: fallbackText
         },
         audioUrl || undefined

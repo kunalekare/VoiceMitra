@@ -275,12 +275,13 @@ export async function registerWorkerVoice(params: {
     params.languageCode || 'hi'
   );
 
-  const phone = params.phone || '+91' + Math.floor(6000000000 + Math.random() * 3999999999).toString();
+  const providedPhone = typeof params.phone === 'string' ? params.phone.trim() : '';
+  const phone = providedPhone || extracted.phone || '';
   const workerId = params.userId || 'w-' + Date.now().toString(36);
   const name = params.overrideData?.name || extracted.name;
   const skill = params.overrideData?.primarySkill || extracted.primarySkill;
   const district = params.overrideData?.district || extracted.location || 'Nagpur';
-  const expYears = params.overrideData?.experienceYears || extracted.experienceYears || 5;
+  const expYears = params.overrideData?.experienceYears ?? extracted.experienceYears ?? 5;
 
   db.transaction(() => {
     // Ensure user row

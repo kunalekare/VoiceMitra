@@ -42,25 +42,25 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
   const [secondarySkills, setSecondarySkills] = useState<string[]>([]);
   const [experienceYears, setExperienceYears] = useState(5);
   const [locationCity, setLocationCity] = useState('Nagpur');
-  const [dailyWage, setDailyWage] = useState(850);
-  const [phone, setPhone] = useState(currentWorker?.phone || '+91 98220 11201');
+  const [dailyWage, setDailyWage] = useState<number | ''>('');
+  const [phone, setPhone] = useState(currentWorker?.phone || '');
   const [portfolioVideoName, setPortfolioVideoName] = useState<string | null>(null);
 
   const handleVoiceSuccess = (result: VoiceRegistrationResult, audioUrl?: string) => {
     setExtractedData(result);
     setRecordedAudioUrl(audioUrl);
 
-    setFullName(result.name || 'कारीगर');
+    setFullName(result.name || '');
     setPrimarySkill(result.primarySkill || 'Electrician');
     setSecondarySkills(result.secondarySkills || []);
-    setExperienceYears(result.experienceYears || 5);
+    setExperienceYears(result.experienceYears ?? 5);
     setLocationCity(result.location || 'Nagpur');
-
-    // Auto set typical wage based on canonical skill
-    const foundSkill = CANONICAL_SKILLS.find((s) => s.canonical === result.primarySkill);
-    if (foundSkill) {
-      setDailyWage(foundSkill.baseDailyWageInr);
-    }
+    setDailyWage(
+      result.dailyWageExpected !== undefined && Number.isFinite(result.dailyWageExpected)
+        ? result.dailyWageExpected
+        : ''
+    );
+    setPhone(result.phone || currentWorker?.phone || '');
 
     setStep('confirm');
   };
@@ -75,7 +75,7 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
       name: fullName,
       primarySkill: canonicalNormalized,
       secondarySkills,
-      experienceYears: Number(experienceYears) || 1,
+      experienceYears: Number.isFinite(Number(experienceYears)) ? Number(experienceYears) : 1,
       languagesSpoken: ['Hindi', 'Marathi', 'English'],
       district: locationCity,
       state: 'Maharashtra',
@@ -95,7 +95,7 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
       verifiedSkillBadges: currentWorker?.verifiedSkillBadges || ['Voice Registered'],
       portfolioVideoUrl: portfolioVideoName ? `portfolio_${portfolioVideoName}` : undefined,
       createdAt: new Date().toISOString(),
-      dailyWageExpected: Number(dailyWage) || 850
+      dailyWageExpected: dailyWage === '' ? undefined : Number(dailyWage)
     };
 
     // 1. Save in reactive client repository
@@ -116,9 +116,9 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
             name: fullName,
             primarySkill: canonicalNormalized,
             secondarySkills,
-            experienceYears: Number(experienceYears) || 1,
+            experienceYears: Number.isFinite(Number(experienceYears)) ? Number(experienceYears) : 1,
             district: locationCity,
-            dailyWageExpected: Number(dailyWage) || 850
+            dailyWageExpected: dailyWage === '' ? undefined : Number(dailyWage)
           }
         })
       });
@@ -221,8 +221,6 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
                   value={primarySkill}
                   onChange={(e) => {
                     setPrimarySkill(e.target.value);
-                    const s = CANONICAL_SKILLS.find((x) => x.canonical === e.target.value);
-                    if (s) setDailyWage(s.baseDailyWageInr);
                   }}
                   className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-3 text-sm font-semibold focus:border-orange-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 >
@@ -269,7 +267,15 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
                 type="number"
                 step={50}
                 value={dailyWage}
-                onChange={(e) => setDailyWage(parseInt(e.target.value) || 800)}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === '') {
+                    setDailyWage('');
+                    return;
+                  }
+                  const parsed = Number.parseInt(raw, 10);
+                  setDailyWage(Number.isFinite(parsed) ? parsed : '');
+                }}
                 className="w-full rounded-xl border border-slate-300 p-3 text-sm font-semibold focus:border-orange-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
@@ -348,7 +354,8 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
               <button
                 type="button"
                 onClick={() => {
-                  const summaryText = `${fullName}, ${localizedTrade(primarySkill)}, ${experienceYears} ${t('voiceRegister.expYearsUnit')}, ${locationCity}, ${localizedCurrency(dailyWage)} / ${t('common.days')}`;
+                  const wagePart = dailyWage === '' ? '' : `, ${localizedCurrency(dailyWage)} / ${t('common.days')}`;
+                  const summaryText = `${fullName}, ${localizedTrade(primarySkill)}, ${experienceYears} ${t('voiceRegister.expYearsUnit')}, ${locationCity}${wagePart}`;
                   speakVernacular(summaryText, currentLang);
                 }}
                 className="flex items-center gap-1.5 rounded-xl bg-orange-600 text-white px-3 py-1.5 text-xs font-bold hover:bg-orange-700 transition"
@@ -369,7 +376,7 @@ export const WorkerVoiceRegistrationPage: React.FC<WorkerVoiceRegistrationPagePr
               <div>
                 <span className="text-slate-500 dark:text-slate-400 block">{t('voiceRegister.wageLabel')}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-sm">
-                  {localizedCurrency(dailyWage)} / {t('common.days')}
+                  {dailyWage === '' ? '—' : `${localizedCurrency(dailyWage)} / ${t('common.days')}`}
                 </span>
               </div>
               <div>

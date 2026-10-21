@@ -242,4 +242,6 @@ export interface VoiceRegistrationResult {
   location: string;
   confidence: number;
   transcript: string;
+  phone?: string;
+  dailyWageExpected?: number;
 }

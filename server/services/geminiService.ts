@@ -22,6 +22,172 @@ export interface VoiceRegistrationExtracted {
   location: string;
   confidence: number;
   transcript: string;
+  phone?: string;
+  dailyWageExpected?: number;
+}
+
+const CANONICAL_TRADE_SKILLS = [
+  'Electrician',
+  'Plumber',
+  'Mason',
+  'Painter',
+  'Carpenter',
+  'Welder',
+  'Driver',
+  'Domestic Help',
+  'AC Technician',
+  'Tile & Marble Setter',
+  'Gardener',
+  'Appliance Repair'
+] as const;
+
+const DIGIT_WORD_MAP: Record<string, string> = {
+  zero: '0', oh: '0', nought: '0',
+  one: '1', two: '2', three: '3', four: '4', five: '5',
+  six: '6', seven: '7', eight: '8', nine: '9',
+  'शून्य': '0', 'सिफर': '0',
+  'एक': '1', 'दो': '2', 'दोन': '2', 'तीन': '3', 'चार': '4',
+  'पाँच': '5', 'पांच': '5', 'पाच': '5',
+  'छह': '6', 'छः': '6', 'सहा': '6',
+  'सात': '7', 'आठ': '8', 'नौ': '9', 'नऊ': '9'
+};
+
+const NAME_TRAILING_STOP = /^(है|आहे|हूँ|हूं|बोल|कर|से|था|आहेत|here|is|am|and|from|i|मैं|मी|an|a|the)$/i;
+
+function indianMobileDigits(raw: string): string | undefined {
+  let digits = (raw || '').replace(/\D/g, '');
+  if (digits.startsWith('91') && digits.length === 12) digits = digits.slice(2);
+  if (digits.startsWith('0') && digits.length === 11) digits = digits.slice(1);
+  if (/^[6-9]\d{9}$/.test(digits)) return digits;
+  return undefined;
+}
+
+export function canonicalizeIndianPhone(raw: string | undefined | null): string | undefined {
+  if (raw == null) return undefined;
+  const digits = indianMobileDigits(String(raw));
+  return digits ? `+91${digits}` : undefined;
+}
+
+function looksLikeIndianMobileNumber(value: number | string): boolean {
+  const digits = String(value).replace(/\D/g, '');
+  return indianMobileDigits(digits) !== undefined && digits.replace(/^91/, '').length >= 10;
+}
+
+function extractSpokenDigitRuns(text: string): string[] {
+  const tokens = (text || '').split(/[\s,،،/\\.|।]+/).filter(Boolean);
+  const runs: string[] = [];
+  let current = '';
+
+  for (const token of tokens) {
+    const lower = token.toLowerCase();
+    if (/^\d$/.test(token)) {
+      current += token;
+      continue;
+    }
+    if (DIGIT_WORD_MAP[lower] != null) {
+      current += DIGIT_WORD_MAP[lower];
+      continue;
+    }
+    if (DIGIT_WORD_MAP[token] != null) {
+      current += DIGIT_WORD_MAP[token];
+      continue;
+    }
+    if (current) {
+      runs.push(current);
+      current = '';
+    }
+  }
+  if (current) runs.push(current);
+  return runs;
+}
+
+function extractPhoneFromText(text: string): string | undefined {
+  if (!text) return undefined;
+
+  const compact = text.replace(/[\s-]/g, '');
+  const grouped = text.match(/(?:\+?91[\s-]*)?[6-9](?:[\s-]?\d){9}/g) || [];
+  for (const candidate of grouped) {
+    const canonical = canonicalizeIndianPhone(candidate);
+    if (canonical) return canonical;
+  }
+
+  const packed = compact.match(/(?:\+?91)?[6-9]\d{9}/g) || [];
+  for (const candidate of packed) {
+    const canonical = canonicalizeIndianPhone(candidate);
+    if (canonical) return canonical;
+  }
+
+  for (const run of extractSpokenDigitRuns(text)) {
+    const canonical = canonicalizeIndianPhone(run);
+    if (canonical) return canonical;
+  }
+
+  return undefined;
+}
+
+function extractDailyWageFromText(text: string): number | undefined {
+  if (!text) return undefined;
+
+  const patterns = [
+    /(?:₹|rs\.?|inr|rupees?|रुपये|रुपए|रु\.?)\s*(\d{2,5})/i,
+    /(\d{2,5})\s*(?:₹|rs\.?|inr|rupees?|रुपये|रुपए|रु\.?|\/\s*day|per\s*day|a\s*day|रोज|प्रति\s*दिन)/i,
+    /(?:daily\s*wage|expected\s*wage|expected\s*salary|wage|wages|salary|rate|मजदूरी|वेतन|दिहाड़ी|दिहाडी|रेट|उम्मीद)\s*(?:is|of|of\s*rs\.?|:)?\s*(?:₹|rs\.?)?\s*(\d{2,5})/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+    const amount = Number.parseInt(match[1], 10);
+    if (!Number.isFinite(amount) || amount < 0 || amount > 100000) continue;
+    if (looksLikeIndianMobileNumber(amount)) continue;
+    return amount;
+  }
+
+  return undefined;
+}
+
+function cleanNameCandidate(raw: string): string {
+  const words = (raw || '').split(/\s+/).filter(Boolean);
+  const kept: string[] = [];
+  for (const word of words) {
+    if (NAME_TRAILING_STOP.test(word)) break;
+    if (/^(electrician|plumber|carpenter|painter|mason|welder|driver|from|in)$/i.test(word)) break;
+    kept.push(word.replace(/[.,;:]+$/g, ''));
+    if (kept.length >= 4) break;
+  }
+  return kept.join(' ').trim();
+}
+
+function constrainNameToTranscript(name: string, transcript: string): string {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return '';
+  const spoken = (transcript || '').trim();
+  if (!spoken) return trimmed;
+
+  if (spoken.toLowerCase().includes(trimmed.toLowerCase())) return trimmed;
+
+  const nameIsLatin = /[A-Za-z]/.test(trimmed);
+  const transcriptIsLatin = /[A-Za-z]/.test(spoken);
+  if (nameIsLatin !== transcriptIsLatin) return trimmed;
+
+  const kept = trimmed.split(/\s+/).filter((token) => spoken.toLowerCase().includes(token.toLowerCase()));
+  return kept.join(' ').trim();
+}
+
+export function sanitizeWageValue(
+  raw: unknown,
+  phone?: string
+): number | undefined {
+  if (raw == null || raw === '') return undefined;
+  const numeric = typeof raw === 'number' ? raw : Number(String(raw).replace(/[^\d.-]/g, ''));
+  if (!Number.isFinite(numeric) || numeric < 0 || numeric > 100000) return undefined;
+  if (looksLikeIndianMobileNumber(numeric)) return undefined;
+  if (phone) {
+    const phoneDigits = phone.replace(/\D/g, '');
+    const wageDigits = String(Math.trunc(numeric));
+    if (phoneDigits.endsWith(wageDigits) && wageDigits.length >= 8) return undefined;
+  }
+  return numeric;
 }
 
 // Multilingual Indian Trade & Entity Knowledge Base
@@ -64,34 +230,28 @@ export function extractWorkerProfileFromText(
 ): VoiceRegistrationExtracted {
   const text = (rawText || '').trim();
 
-  // 1. Extract Name
+  // 1. Extract Name — only tokens actually present in speech; never invent a surname
   let detectedName = '';
   const namePatterns = [
-    /(?:मेरा नाम|माझं नाव|माझे नाव|என் பெயர்|నా పేరు|আমার নাম|ਮੇਰਾ ਨਾਮ|نام|my name is|i am|this is|myself)\s+([^\s,।\n]+(?:\s+[^\s,।\n]+){0,2})/i,
-    /(?:मैं|मी)\s+([^\s,।\n]+(?:\s+[^\s,।\n]+)?)\s+(?:बोल रहा|बोल रही|हूँ|हूं|आहे|here)/i,
-    /(?:call me|नाम है)\s+([^\s,।\n]+(?:\s+[^\s,।\n]+){0,2})/i
+    /(?:मेरा नाम|माझं नाव|माझे नाव|என் பெயர்|నా పేరు|আমার নাম|ਮੇਰਾ ਨਾਮ|نام|my name is|i am|this is|myself)\s+([^\s,।\n]+(?:\s+[^\s,।\n]+){0,3})/i,
+    /(?:मैं|मी)\s+([^\s,।\n]+(?:\s+[^\s,।\n]+){0,3})\s+(?:बोल रहा|बोल रही|हूँ|हूं|आहे|here)/i,
+    /(?:call me|नाम है)\s+([^\s,।\n]+(?:\s+[^\s,।\n]+){0,3})/i
   ];
 
   for (const pat of namePatterns) {
     const match = text.match(pat);
     if (match && match[1]) {
-      detectedName = match[1]
-        .replace(/\s+(है|आहे|हूँ|हूं|बोल|कर|से|था|आहेत|here|is|am|and|from)$/gi, '')
-        .trim();
-      break;
+      detectedName = cleanNameCandidate(match[1]);
+      if (detectedName) break;
     }
   }
 
   if (!detectedName) {
     // If text starts with 2 capitalized or Devanagari words before a comma
-    const leadingWordsMatch = text.match(/^([A-Z\u0900-\u097F][^\s,।]+(?:\s+[A-Z\u0900-\u097F][^\s,।]+)?)\s*[,।]/);
+    const leadingWordsMatch = text.match(/^([A-Z\u0900-\u097F][^\s,।]+(?:\s+[A-Z\u0900-\u097F][^\s,।]+){0,2})\s*[,।]/);
     if (leadingWordsMatch && leadingWordsMatch[1]) {
-      detectedName = leadingWordsMatch[1].trim();
+      detectedName = cleanNameCandidate(leadingWordsMatch[1]);
     }
-  }
-
-  if (!detectedName) {
-    detectedName = preferredLang === 'mr' ? 'कारीगर (कामगार)' : 'कारीगर (Craftsman)';
   }
 
   // 2. Extract Skill / Trade
@@ -158,16 +318,80 @@ export function extractWorkerProfileFromText(
 
   const secondarySkills = SECONDARY_SKILLS_BY_TRADE[primarySkill] || ['Maintenance', 'Field Repair'];
   const confidence = detectedName && primarySkill && expMatch ? 0.96 : 0.88;
+  const phone = extractPhoneFromText(text);
+  const dailyWageExpected = extractDailyWageFromText(text);
 
-  return {
+  const extracted: VoiceRegistrationExtracted = {
     name: detectedName,
     primarySkill,
     secondarySkills,
     experienceYears,
     location,
     confidence,
-    transcript: text || 'Voice registration transcript recorded.'
+    transcript: text
   };
+
+  if (phone) extracted.phone = phone;
+  if (dailyWageExpected !== undefined) extracted.dailyWageExpected = dailyWageExpected;
+
+  return extracted;
+}
+
+export function normalizeVoiceRegistrationResult(
+  parsed: unknown,
+  transcript: string,
+  languageCode = 'hi'
+): VoiceRegistrationExtracted {
+  const parsedObj = parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {};
+  const parsedTranscript = typeof parsedObj.transcript === 'string' ? parsedObj.transcript : '';
+  const spoken = (transcript || parsedTranscript || '').trim();
+  const nlu = extractWorkerProfileFromText(spoken, languageCode);
+
+  const geminiName = typeof parsedObj.name === 'string' ? parsedObj.name.trim() : '';
+  const name = nlu.name || constrainNameToTranscript(geminiName, spoken);
+
+  const geminiSkill = typeof parsedObj.primarySkill === 'string' ? parsedObj.primarySkill.trim() : '';
+  const primarySkill = (CANONICAL_TRADE_SKILLS as readonly string[]).includes(geminiSkill)
+    ? geminiSkill
+    : nlu.primarySkill;
+
+  let experienceYears = nlu.experienceYears;
+  if (parsedObj.experienceYears != null && parsedObj.experienceYears !== '') {
+    const parsedExp = Number(parsedObj.experienceYears);
+    if (Number.isFinite(parsedExp)) {
+      experienceYears = Math.min(40, Math.max(0, parsedExp));
+    }
+  }
+
+  const geminiLocation = typeof parsedObj.location === 'string' ? parsedObj.location.trim() : '';
+  const location = geminiLocation || nlu.location;
+
+  const nluPhone = nlu.phone;
+  const phone = nluPhone;
+
+  const nluWage = nlu.dailyWageExpected;
+  const dailyWageExpected = nluWage;
+
+  const secondarySkills = Array.isArray(parsedObj.secondarySkills)
+    ? parsedObj.secondarySkills.filter((item): item is string => typeof item === 'string')
+    : [];
+
+  const parsedConfidence = Number(parsedObj.confidence);
+
+  const result: VoiceRegistrationExtracted = {
+    name,
+    primarySkill,
+    secondarySkills: secondarySkills.length > 0 ? secondarySkills : nlu.secondarySkills,
+    experienceYears,
+    location,
+    confidence: Number.isFinite(parsedConfidence) ? parsedConfidence : nlu.confidence,
+    transcript: spoken || nlu.transcript
+  };
+
+  if (phone) result.phone = phone;
+  if (dailyWageExpected !== undefined) result.dailyWageExpected = dailyWageExpected;
+
+  return result;
 }
 
 export async function processVoiceRegistration(
@@ -200,14 +424,16 @@ export async function processVoiceRegistration(
 You are the voice registration engine for SkillBridge, India's voice-first hiring platform for informal workers.
 ${cleanInputText ? `Worker speech transcription / text: "${cleanInputText}". Spoken language: ${languageCode}.` : `Listen to this audio recorded by an Indian informal worker (speaking in ${languageCode} or Hindi/Marathi/Tamil/Telugu/English).`}
 
-Extract:
-1. name: Worker actual full name extracted from the speech (e.g., "Ramesh Patel", "सुनीता देवी", "Santosh Kamble")
+Extract only facts that are clearly present in the speech. Never invent, guess, or complete missing values.
+1. name: The worker's name exactly as spoken. Include a surname only if the worker said it. If the name is absent, use "".
 2. primarySkill: One of [Electrician, Plumber, Mason, Painter, Carpenter, Welder, Driver, Domestic Help, AC Technician, Tile & Marble Setter, Gardener, Appliance Repair]
 3. secondarySkills: string[] of 3-4 realistic related trade sub-skills
 4. experienceYears: number (extracted years of experience)
 5. location: City or district in India (e.g., Nagpur, Pune, Mumbai, Delhi, Bengaluru, Hyderabad, Chennai)
-6. confidence: number between 0.80 and 0.99
-7. transcript: accurate transcript of what the worker said in their original language
+6. phone: Indian mobile number digits exactly as spoken (including digit-by-digit speech). Use "" if not stated. Never generate a number.
+7. dailyWageExpected: expected daily wage in INR as a number if stated. Use null if not stated. Never copy a phone number into this field.
+8. confidence: number between 0.80 and 0.99
+9. transcript: accurate transcript of what the worker said in their original language
 
 Return pure JSON:
 {
@@ -216,6 +442,8 @@ Return pure JSON:
   "secondarySkills": ["string"],
   "experienceYears": number,
   "location": "string",
+  "phone": "string",
+  "dailyWageExpected": number_or_null,
   "confidence": number,
   "transcript": "string"
 }
@@ -232,17 +460,17 @@ Return pure JSON:
         });
 
         if (response.text) {
-          const parsed = JSON.parse(response.text);
-          if (parsed.name && parsed.primarySkill) {
-            return {
-              name: parsed.name,
-              primarySkill: parsed.primarySkill,
-              secondarySkills: Array.isArray(parsed.secondarySkills) ? parsed.secondarySkills : (SECONDARY_SKILLS_BY_TRADE[parsed.primarySkill] || []),
-              experienceYears: Number(parsed.experienceYears) || 5,
-              location: parsed.location || 'Nagpur',
-              confidence: Number(parsed.confidence) || 0.95,
-              transcript: parsed.transcript || cleanInputText || 'Voice profile recorded'
-            };
+          let parsed: unknown;
+          try {
+            parsed = JSON.parse(response.text);
+          } catch {
+            parsed = null;
+          }
+          if (parsed && typeof parsed === 'object') {
+            const transcript = cleanInputText || (typeof (parsed as { transcript?: unknown }).transcript === 'string'
+              ? (parsed as { transcript: string }).transcript
+              : '');
+            return normalizeVoiceRegistrationResult(parsed, transcript, languageCode);
           }
         }
       } catch (err: any) {
@@ -257,9 +485,8 @@ Return pure JSON:
     }
   }
 
-  // 2. Intelligent Multilingual Indian NLU Fallback
-  const textToParse = cleanInputText || 'नमस्ते मेरा नाम सुरेश कुमार है, मैं नागपुर से हूँ और 8 साल से इलेक्ट्रीशियन का काम कर रहा हूँ।';
-  return extractWorkerProfileFromText(textToParse, languageCode);
+  // 2. Intelligent Multilingual Indian NLU Fallback — parse only actual speech, never a fabricated sample
+  return extractWorkerProfileFromText(cleanInputText, languageCode);
 }
 
 export async function processVoiceJobMatch(
